@@ -77,7 +77,6 @@ case $ROM_CHOICE in
 
     2)
         ROM_NAME="YAAP 16.2"
-        ROM_VERSION="16.2"
         GH_REPO="mayuresh-releases/YAAP_stone"
 
         REPO_INIT_URL="https://github.com/yaap/manifest.git"
@@ -96,15 +95,12 @@ case $ROM_CHOICE in
 
     3)
         ROM_NAME="Infinity-X"
-        ROM_VERSION="16.0"
         GH_REPO="mayuresh-releases/Infinity-X_stone"
 
         REPO_INIT_URL="https://github.com/projectinfinity-X/manifest"
         REPO_INIT_BRANCH="16"
-
         USE_LOCAL_MANIFEST="false"
         LOCAL_MANIFEST_BRANCH=""
-
         BUILD_TARGET="infinity_stone-userdebug"
         BUILD_COMMAND="m bacon"
         CUSTOM_REPOS=()
@@ -117,6 +113,20 @@ case $ROM_CHOICE in
             "git clone --depth=1 https://github.com/LineageOS/android_hardware_xiaomi.git -b lineage-23.2 hardware/xiaomi"
             "git clone --depth=1 https://github.com/mayuresh-sources/packages_apps_ViPER4AndroidFX.git packages/apps/ViPER4AndroidFX"
         )
+        ;;
+
+    4)
+        ROM_NAME="Project Matrixx"
+
+        REPO_INIT_URL="https://github.com/ProjectMatrixx/android.git"
+        REPO_INIT_BRANCH="16.2"
+        USE_LOCAL_MANIFEST="true"
+        LOCAL_MANIFEST_BRANCH="matrixx-16"
+        BUILD_TARGET="matrixx_stone-bp4a-user"
+        BUILD_COMMAND="make matrixx"
+
+        CUSTOM_REPOS=()
+        MANUAL_GIT_CLONES=()
         ;;
 
     *)
@@ -347,6 +357,19 @@ case $ROM_CHOICE in
             FILES_TO_UPLOAD+=("$AUTO_JSON")
         else
             echo "⚠️ Warning: Expected Infinity-X JSON at $(basename "$AUTO_JSON") but it was not found."
+        fi
+        ;;
+
+    4)
+        # 🟣 Project Matrixx Pre-built Structure
+        echo "Locating pre-built OTA JSON for Project Matrixx..."
+        JSON_FILE="vendor/MatrixxOTA/${DEVICE}.json"
+
+        if [ -f "$JSON_FILE" ]; then
+            echo "✅ Found Matrixx OTA JSON: $JSON_FILE"
+            FILES_TO_UPLOAD+=("$JSON_FILE")
+        else
+            echo "⚠️ Warning: Expected Matrixx JSON at $JSON_FILE but it was not found."
         fi
         ;;
 esac
