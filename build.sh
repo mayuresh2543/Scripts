@@ -432,15 +432,48 @@ if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
         echo "------------------------------------------"
     done
 
-    echo "🎉 All uploads complete for $ROM_NAME!"
+    echo "🎉 Main uploads complete for $ROM_NAME!"
     echo "🔗 Master Link: $MASTER_LINK"
+
+    # ==========================================
+    # 📦 SECONDARY UPLOAD (Matrixx ZIP ONLY)
+    # ==========================================
+    SECONDARY_LINK=""
+    if [ "$ROM_CHOICE" == "4" ]; then
+        echo "=========================================="
+        echo "☁️ Performing secondary upload for Matrixx ROM zip only..."
+        FILE_NAME=$(basename "$ROM_ZIP")
+        echo "⬆️ Uploading standalone zip: $FILE_NAME..."
+
+        # Upload without folder tokens so it gets its own standalone link
+        UPLOAD_RES_2=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
+            -F "file=@${ROM_ZIP}" \
+            "https://${SERVER}.gofile.io/contents/uploadfile")
+
+        STATUS_2=$(echo "$UPLOAD_RES_2" | jq -r '.status')
+
+        if [ "$STATUS_2" == "ok" ]; then
+            echo "✅ Secondary Upload Successful!"
+            SECONDARY_LINK=$(echo "$UPLOAD_RES_2" | jq -r '.data.downloadPage')
+            echo "🔗 Secondary Link (Zip Only): $SECONDARY_LINK"
+        else
+            echo "❌ Secondary upload failed!"
+            exit 1
+        fi
+    fi
 
     # ==========================================
     # 🚀 SEND SUCCESS NOTIFICATION
     # ==========================================
     if [ -n "$MASTER_LINK" ]; then
         echo "📱 Sending 'Build Success' notification..."
-        SUCCESS_MSG="🚀 <b>Build Finished!</b>%0A📱 <b>Device:</b> ${DEVICE}%0A💿 <b>ROM:</b> ${ROM_NAME}%0A⏱️ <b>Time:</b> ${BUILD_MINUTES} minutes%0A🔗 <a href=\"${MASTER_LINK}\">Download on Gofile</a>"
+
+        # If secondary link exists (Matrixx), format message with both links
+        if [ -n "$SECONDARY_LINK" ]; then
+            SUCCESS_MSG="🚀 <b>Build Finished!</b>%0A📱 <b>Device:</b> ${DEVICE}%0A💿 <b>ROM:</b> ${ROM_NAME}%0A⏱️ <b>Time:</b> ${BUILD_MINUTES} minutes%0A📁 <a href=\"${MASTER_LINK}\">Download Folder (All Files)</a>%0A📦 <a href=\"${SECONDARY_LINK}\">Download ROM Zip Only</a>"
+        else
+            SUCCESS_MSG="🚀 <b>Build Finished!</b>%0A📱 <b>Device:</b> ${DEVICE}%0A💿 <b>ROM:</b> ${ROM_NAME}%0A⏱️ <b>Time:</b> ${BUILD_MINUTES} minutes%0A🔗 <a href=\"${MASTER_LINK}\">Download on Gofile</a>"
+        fi
 
         send_tg_msg "$SUCCESS_MSG"
         echo "✅ Notification sent!"
