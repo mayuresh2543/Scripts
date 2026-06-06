@@ -64,12 +64,12 @@ handle_error() {
     local ELAPSED_MINUTES=$(((END_TIME - START_TIME) / 60))
     local DISPLAY_ROM="${ROM_NAME:-Unknown}"
     
-    local FAIL_MSG="❌ <b>Build FAILED!</b>%0A📱 <b>Device:</b> ${DEVICE}%0A💿 <b>ROM:</b> ${DISPLAY_ROM}%0A⏱️ <b>Failed After:</b> ${ELAPSED_MINUTES} minutes%0A⚠️ <b>Error at script line:</b> ${FAILED_LINE}"
+    local FAIL_MSG="BUILD FAILED ❌%0A├─ 📱 <b>Device:</b> ${DEVICE}%0A├─ 💿 <b>ROM:</b> ${DISPLAY_ROM}%0A├─ ⏱️ <b>Time:</b> ${ELAPSED_MINUTES}m%0A├─ ⚠️ <b>Error:</b> Line ${FAILED_LINE}"
     
     if [ -n "$LOG_LINK" ]; then
-        FAIL_MSG="${FAIL_MSG}%0A📄 <b>Log File:</b> <a href=\"${LOG_LINK}\">View on Gofile</a>"
+        FAIL_MSG="${FAIL_MSG}%0A└─ 📄 <a href=\"${LOG_LINK}\">View Crash Log</a>"
     else
-        FAIL_MSG="${FAIL_MSG}%0A💻 Check Crave logs immediately."
+        FAIL_MSG="${FAIL_MSG}%0A└─ 💻 Check Crave Logs"
     fi
 
     send_tg_msg "$FAIL_MSG"
@@ -181,7 +181,7 @@ echo "✅ Selected ROM: $ROM_NAME"
 # 🚀 SEND START NOTIFICATION
 # ==========================================
 echo "📱 Sending 'Build Started' notification..."
-START_MSG="⏳ <b>Build Started!</b>%0A📱 <b>Device:</b> ${DEVICE}%0A💿 <b>ROM:</b> ${ROM_NAME}%0A💻 <b>Host:</b> Crave"
+START_MSG="BUILD STARTED ⏳%0A├─ 📱 <b>Device:</b> ${DEVICE}%0A├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A└─ 💻 <b>Host:</b> Crave"
 send_tg_msg "$START_MSG"
 
 echo "=========================================="
@@ -510,9 +510,9 @@ if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
 
         # If secondary link exists (Matrixx), format message with both links
         if [ -n "$SECONDARY_LINK" ]; then
-            SUCCESS_MSG="🚀 <b>Build Finished!</b>%0A📱 <b>Device:</b> ${DEVICE}%0A💿 <b>ROM:</b> ${ROM_NAME}%0A⏱️ <b>Time:</b> ${BUILD_MINUTES} minutes%0A📁 <a href=\"${MASTER_LINK}\">Download Folder (All Files)</a>%0A📦 <a href=\"${SECONDARY_LINK}\">Download ROM Zip Only</a>"
+            SUCCESS_MSG="BUILD SUCCESSFUL 🚀%0A├─ 📱 <b>Device:</b> ${DEVICE}%0A├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A├─ ⏱️ <b>Time:</b> ${BUILD_MINUTES}m%0A├─ 📁 <a href=\"${MASTER_LINK}\">Download Folder (All Files)</a>%0A└─ 📦 <a href=\"${SECONDARY_LINK}\">Download ROM Zip Only</a>"
         else
-            SUCCESS_MSG="🚀 <b>Build Finished!</b>%0A📱 <b>Device:</b> ${DEVICE}%0A💿 <b>ROM:</b> ${ROM_NAME}%0A⏱️ <b>Time:</b> ${BUILD_MINUTES} minutes%0A🔗 <a href=\"${MASTER_LINK}\">Download on Gofile</a>"
+            SUCCESS_MSG="BUILD SUCCESSFUL 🚀%0A├─ 📱 <b>Device:</b> ${DEVICE}%0A├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A├─ ⏱️ <b>Time:</b> ${BUILD_MINUTES}m%0A└─ 🔗 <a href=\"${MASTER_LINK}\">Download on Gofile</a>"
         fi
 
         send_tg_msg "$SUCCESS_MSG"
