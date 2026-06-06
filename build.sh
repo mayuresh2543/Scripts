@@ -90,6 +90,7 @@ echo "=========================================="
 # ==========================================
 # 🔀 The Switchboard (Define your ROMs here)
 # ==========================================
+NEEDS_STANDALONE_ZIP="false"
 case $ROM_CHOICE in
     1)
         ROM_NAME="LineageOS 23.2"
@@ -164,6 +165,7 @@ case $ROM_CHOICE in
         LOCAL_MANIFEST_BRANCH="matrixx-16"
         BUILD_TARGET="matrixx_stone-bp4a-user"
         BUILD_COMMAND="make matrixx"
+        NEEDS_STANDALONE_ZIP="true"
 
         CUSTOM_REPOS=()
         MANUAL_GIT_CLONES=()
@@ -427,6 +429,12 @@ for IMG in boot.img dtb.img dtbo.img vendor_boot.img; do
     fi
 done
 
+# Append the build log so it is preserved alongside the ROM
+if [ -f "$LOG_FILE" ]; then
+    FILES_TO_UPLOAD+=("$LOG_FILE")
+    echo "✅ Found Build Log: $LOG_FILE"
+fi
+
 echo "------------------------------------------"
 SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
 
@@ -476,12 +484,12 @@ if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
     echo "🔗 Master Link: $MASTER_LINK"
 
     # ==========================================
-    # 📦 SECONDARY UPLOAD (Matrixx ZIP ONLY)
+    # 📦 SECONDARY UPLOAD (Standalone ZIP ONLY)
     # ==========================================
     SECONDARY_LINK=""
-    if [ "$ROM_CHOICE" == "4" ]; then
+    if [ "$NEEDS_STANDALONE_ZIP" == "true" ]; then
         echo "=========================================="
-        echo "☁️ Performing secondary upload for Matrixx ROM zip only..."
+        echo "☁️ Performing secondary upload for standalone ROM zip only..."
         FILE_NAME=$(basename "$ROM_ZIP")
         echo "⬆️ Uploading standalone zip: $FILE_NAME..."
 
