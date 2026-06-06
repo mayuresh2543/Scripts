@@ -12,7 +12,9 @@ TELEGRAM_CHAT_ID="-1003914151464"
 # ==========================================
 
 # Strict Execution: Abort on any failure
-set -e
+# (-E and pipefail added to ensure Crave pipes trigger the trap correctly)
+set -eE
+set -o pipefail
 
 # ==========================================
 # 📨 Telegram Helper Function & Error Trap
@@ -28,10 +30,48 @@ send_tg_msg() {
 
 # This function is triggered ONLY if the script crashes
 handle_error() {
+    trap - ERR # Disable trap to prevent infinite loops
+    set +eE    # 🛑 CRITICAL: Turn off strict mode inside the handler
+    set +o pipefail # 🛑 Turn off pipefail so network errors don't kill the handler
     local FAILED_LINE="$1"
     echo "❌ CRITICAL: Build failed on line $FAILED_LINE!"
 
-    local FAIL_MSG="❌ <b>Build FAILED!</b>%0A📱 <b>Device:</b> ${DEVICE}%0A⚠️ <b>Error at script line:</b> ${FAILED_LINE}%0A💻 Check Crave logs immediately."
+    local LOG_LINK=""
+    
+    # Try to upload the log file if it exists
+    if [ -n "$LOG_FILE" ] && [ -f "$LOG_FILE" ]; then
+        echo "☁️ Attempting to upload error log to Gofile..."
+        
+        # Ensure jq is installed
+        if ! command -v jq &> /dev/null; then
+            sudo apt-get install -y jq > /dev/null 2>&1 || true
+        fi
+        
+        if command -v jq &> /dev/null; then
+            local SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
+            if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
+                local UPLOAD_RES=$(curl -s -F "file=@${LOG_FILE}" "https://${SERVER}.gofile.io/contents/uploadfile")
+                local STATUS=$(echo "$UPLOAD_RES" | jq -r '.status')
+                if [ "$STATUS" == "ok" ]; then
+                    LOG_LINK=$(echo "$UPLOAD_RES" | jq -r '.data.downloadPage')
+                    echo "✅ Error log uploaded successfully!"
+                fi
+            fi
+        fi
+    fi
+
+    local END_TIME=$(date +%s)
+    local ELAPSED_MINUTES=$(((END_TIME - START_TIME) / 60))
+    local DISPLAY_ROM="${ROM_NAME:-Unknown}"
+    
+    local FAIL_MSG="❌ <b>Build FAILED!</b>%0A📱 <b>Device:</b> ${DEVICE}%0A💿 <b>ROM:</b> ${DISPLAY_ROM}%0A⏱️ <b>Failed After:</b> ${ELAPSED_MINUTES} minutes%0A⚠️ <b>Error at script line:</b> ${FAILED_LINE}"
+    
+    if [ -n "$LOG_LINK" ]; then
+        FAIL_MSG="${FAIL_MSG}%0A📄 <b>Log File:</b> <a href=\"${LOG_LINK}\">View on Gofile</a>"
+    else
+        FAIL_MSG="${FAIL_MSG}%0A💻 Check Crave logs immediately."
+    fi
+
     send_tg_msg "$FAIL_MSG"
     exit 1
 }
@@ -131,7 +171,7 @@ case $ROM_CHOICE in
 
     *)
         echo "❌ Invalid ROM choice! Please use a valid number."
-        exit 1
+        handle_error $LINENO
         ;;
 esac
 
@@ -202,8 +242,10 @@ export BUILD_HOSTNAME=crave
 export TZ="Asia/Kolkata"
 
 # 4. Setup & Lunch
+set +eE   # 🛑 Turn OFF strict mode
 source build/envsetup.sh
 lunch "$BUILD_TARGET"
+set -eE   # 🟢 Turn strict mode back ON for the actual compilation
 
 # 5. Prep the output directory
 echo "Cleaning output directory..."
@@ -245,9 +287,8 @@ if [ -n "$ROM_ZIP" ] && [ -f "$ROM_ZIP" ]; then
     FILES_TO_UPLOAD+=("$ROM_ZIP")
     echo "✅ Found ROM: $(basename "$ROM_ZIP")"
 else
-    # This will trigger the ERR trap we set at the top!
     echo "❌ ROM zip not found in ${TARGET_DIR}."
-    exit 1
+    handle_error $LINENO
 fi
 
 # ==========================================
@@ -425,9 +466,8 @@ if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
                 echo "📁 Folder created! Grouping remaining files here..."
             fi
         else
-            # Trigger error trap if upload fails
             echo "❌ Failed to upload $FILE_NAME"
-            exit 1
+            handle_error $LINENO
         fi
         echo "------------------------------------------"
     done
@@ -458,7 +498,7 @@ if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
             echo "🔗 Secondary Link (Zip Only): $SECONDARY_LINK"
         else
             echo "❌ Secondary upload failed!"
-            exit 1
+            handle_error $LINENO
         fi
     fi
 
@@ -481,6 +521,6 @@ if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
 
 else
     echo "❌ Failed to fetch a Gofile server. API might be down."
-    exit 1
+    handle_error $LINENO
 fi
 echo "=========================================="
