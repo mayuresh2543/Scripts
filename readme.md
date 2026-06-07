@@ -8,8 +8,33 @@ This repository contains a single, focused `build.sh` script used to automate cu
 
 ## 🚀 Triggering a Build
 
-To start a build on your Crave environment, simply run the following command in your terminal:
+To start a build on your Crave environment, simply copy and paste the command for your desired ROM into your terminal:
 
+### 📱 Xiaomi Poco X5 / Redmi Note 12 5G (`stone`)
+
+**LineageOS 23.2**
+```bash
+crave run --no-patch -- "curl -s https://raw.githubusercontent.com/mayuresh2543/Scripts/refs/heads/16/build.sh | bash -s stone 1"
 ```
-crave run --no-patch -- "curl -s https://raw.githubusercontent.com/mayuresh2543/Scripts/refs/heads/16/build.sh | bash -s 1"
+
+**YAAP 16.2**
+```bash
+crave run --no-patch -- "curl -s https://raw.githubusercontent.com/mayuresh2543/Scripts/refs/heads/16/build.sh | bash -s stone 2"
+```
+
+**Infinity-X**
+```bash
+crave run --no-patch -- "curl -s https://raw.githubusercontent.com/mayuresh2543/Scripts/refs/heads/16/build.sh | bash -s stone 3"
+```
+
+**Project Matrixx**
+```bash
+crave run --no-patch -- "curl -s https://raw.githubusercontent.com/mayuresh2543/Scripts/refs/heads/16/build.sh | bash -s stone 4"
+```
+
+### 📱 Xiaomi Redmi Note 11 (`spes`)
+
+**LineageOS 20**
+```bash
+crave run --no-patch -- "curl -s https://raw.githubusercontent.com/mayuresh2543/Scripts/refs/heads/16/build.sh | bash -s spes 1"
 ```
