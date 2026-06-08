@@ -6,6 +6,15 @@
 DEVICE=${1:-"stone"}
 ROM_CHOICE=${2:-1}
 START_TIME=$(date +%s)
+LOG_FILE="build_${DEVICE}_$(date +%Y%m%d_%H%M).log"
+
+# ==========================================
+# 📝 Setup Full-Script Logging
+# ==========================================
+# Save original stdout/stderr to fd 3 and 4
+exec 3>&1 4>&2
+# Redirect all subsequent output to our log file via tee
+exec 1> >(tee -a "$LOG_FILE") 2>&1
 
 # 📱 Telegram Notification Setup
 TELEGRAM_TOKEN="8801527482:AAGiuNQtKJka2bbOxeZap25PDsgYEoK77AQ"
@@ -33,6 +42,11 @@ handle_error() {
     set +eE    # 🛑 CRITICAL: Turn off strict mode inside the handler
     set +o pipefail # 🛑 Turn off pipefail so network errors don't kill the handler
     local FAILED_LINE="$1"
+
+    # Restore standard output/error to safely terminate the background logger
+    exec 1>&3 2>&4
+    sleep 1 # Ensure tee finishes writing buffers to disk
+
     echo "❌ CRITICAL: Build failed on line $FAILED_LINE!"
 
     local LOG_LINK=""
@@ -337,20 +351,11 @@ compile_rom() {
     # 6. Compilation with Logging
     echo "=========================================="
     echo "🔨 Starting compilation for $ROM_NAME..."
-    echo "⚙️ Executing: $BUILD_COMMAND"
+    echo "🚀 Initiating Build for $BUILD_TARGET..."
     echo "=========================================="
 
-    # Create a highly specific log file name
-    LOG_FILE="build_${DEVICE}_$(date +%Y%m%d_%H%M).log"
-
-    # Dynamically run whatever command the ROM needs, pipe to log
-    $BUILD_COMMAND 2>&1 | tee "$LOG_FILE"
-
-    if [ -f "$LOG_FILE" ] && command -v gzip &> /dev/null; then
-        echo "🗜️ Compressing build log..."
-        gzip -9 "$LOG_FILE"
-        LOG_FILE="${LOG_FILE}.gz"
-    fi
+    # Dynamically run whatever command the ROM needs
+    $BUILD_COMMAND
 
     # Calculate precise time taken
     END_TIME=$(date +%s)
@@ -525,12 +530,6 @@ process_artifacts() {
             echo "⚠️ Warning: $IMG not found. Skipping."
         fi
     done
-
-    # Append the build log so it is preserved alongside the ROM
-    if [ -f "$LOG_FILE" ]; then
-        FILES_TO_UPLOAD+=("$LOG_FILE")
-        echo "✅ Found Build Log: $LOG_FILE"
-    fi
 }
 
 upload_and_notify() {
@@ -648,4 +647,22 @@ send_start_notification
 sync_repositories
 compile_rom
 process_artifacts
+
+# ==========================================
+# 🗜️ Finalize Logs & Upload
+# ==========================================
+# Restore original stdout/stderr (this gracefully terminates the background tee logger)
+exec 1>&3 2>&4
+sleep 1 # Flush buffers
+
+if [ -f "$LOG_FILE" ] && command -v gzip &> /dev/null; then
+    echo "=========================================="
+    echo "🗜️ Compressing full execution log..."
+    gzip -9 "$LOG_FILE"
+    LOG_FILE="${LOG_FILE}.gz"
+fi
+
+# Append the compressed log file to the upload payload
+FILES_TO_UPLOAD+=("$LOG_FILE")
+
 upload_and_notify
