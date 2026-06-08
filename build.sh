@@ -293,7 +293,12 @@ sync_repositories() {
     if [ ${#CUSTOM_REPOS[@]} -gt 0 ]; then
         echo "=========================================="
         echo "Syncing custom repositories in parallel for $ROM_NAME..."
-        BASE_URL="https://github.com/mayuresh-sources"
+        
+        if [ "$DEVICE" == "spes" ]; then
+            BASE_URL="https://github.com/mayuresh-spes-sources"
+        else
+            BASE_URL="https://github.com/mayuresh-sources"
+        fi
 
         for repo_info in "${CUSTOM_REPOS[@]}"; do
             DIR="${repo_info%%|*}"
