@@ -162,12 +162,12 @@ case "$DEVICE" in
                 BUILD_COMMAND="m bacon"
 
                 MANUAL_GIT_CLONES=(
-                    "git clone --depth=1 https://github.com/Infinity-X-Devices/device_xiaomi_stone.git device/xiaomi/stone"
-                    "git clone --depth=1 https://github.com/Infinity-X-Devices/vendor_xiaomi_stone.git vendor/xiaomi/stone"
-                    "git clone --depth=1 https://github.com/Infinity-X-Devices/kernel_xiaomi_stone.git kernel/xiaomi/stone"
-                    "git clone --depth=1 https://github.com/mayuresh-sources/hardware_dolby.git -b sony-1.0 hardware/dolby"
-                    "git clone --depth=1 https://github.com/LineageOS/android_hardware_xiaomi.git -b lineage-23.2 hardware/xiaomi"
-                    "git clone --depth=1 https://github.com/mayuresh-sources/packages_apps_ViPER4AndroidFX.git packages/apps/ViPER4AndroidFX"
+                    "https://github.com/Infinity-X-Devices/device_xiaomi_stone.git device/xiaomi/stone"
+                    "https://github.com/Infinity-X-Devices/vendor_xiaomi_stone.git vendor/xiaomi/stone"
+                    "https://github.com/Infinity-X-Devices/kernel_xiaomi_stone.git kernel/xiaomi/stone"
+                    "https://github.com/mayuresh-sources/hardware_dolby.git -b sony-1.0 hardware/dolby"
+                    "https://github.com/LineageOS/android_hardware_xiaomi.git -b lineage-23.2 hardware/xiaomi"
+                    "https://github.com/mayuresh-sources/packages_apps_ViPER4AndroidFX.git packages/apps/ViPER4AndroidFX"
                 )
                 ;;
 
@@ -217,7 +217,7 @@ case "$DEVICE" in
                 ;;
 
             *)
-                echo "❌ Invalid ROM choice for spes!"
+                echo "❌ Invalid ROM choice for spes! (Only LineageOS is supported)"
                 handle_error $LINENO
                 ;;
         esac
@@ -277,16 +277,16 @@ sync_repositories() {
     # 1.5 Execute Manual Git Clones (If any are defined)
     if [ ${#MANUAL_GIT_CLONES[@]} -gt 0 ]; then
         echo "=========================================="
-        echo "📥 Executing Manual Source Clones in parallel..."
-        for clone_cmd in "${MANUAL_GIT_CLONES[@]}"; do
-            TARGET_DIR=$(echo "$clone_cmd" | awk '{print $NF}')
-            echo "🧹 Cleaning and Cloning $TARGET_DIR..."
+        echo "⬇️ Executing Manual Git Clones in parallel..."
+        for clone_args in "${MANUAL_GIT_CLONES[@]}"; do
+            TARGET_DIR=$(echo "$clone_args" | awk '{print $NF}')
+            echo "🗑️ Removing $TARGET_DIR to prepare for clean clone..."
             rm -rf "$TARGET_DIR"
-
-            eval "$clone_cmd" &
+            
+            # Execute unquoted clone_args to allow bash word splitting for URL, -b branch, and TARGET
+            git clone --depth=1 $clone_args &
         done
-        wait
-        echo "✅ Manual clones completed."
+        wait # Wait for all manual clones to finish
     fi
 
     # 2. Parallel Custom Source Sync
