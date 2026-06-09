@@ -276,7 +276,13 @@ sync_repositories() {
         echo "⏭️ Skipping local manifests (Not supported by $ROM_NAME)."
     fi
 
-    /opt/crave/resync.sh
+    if [ -f /opt/crave/resync.sh ]; then
+        echo "🚀 Running Crave resync..."
+        /opt/crave/resync.sh
+    else
+        echo "🚀 Running standard repo sync..."
+        repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j$(nproc --all)
+    fi
 
     # 1.4 Execute Manual Removals (If any are defined)
     if [ ${#MANUAL_REMOVALS[@]} -gt 0 ]; then
