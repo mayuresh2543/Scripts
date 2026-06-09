@@ -226,7 +226,7 @@ case "$DEVICE" in
 
                 CUSTOM_REPOS=(
                     "packages/apps/Updater|lineage_packages_apps_Updater"
-                    "build|lineage_android_build"
+                    "build/make|lineage_android_build"
                 )
                 ;;
 
