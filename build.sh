@@ -7,6 +7,7 @@ DEVICE=${1:-"stone"}
 ROM_CHOICE=${2:-1}
 START_TIME=$(date +%s)
 LOG_FILE="build_${DEVICE}_$(date +%Y%m%d_%H%M).log"
+rm -f "/tmp/build_failed.lock"
 
 # ==========================================
 # 📝 Setup Full-Script Logging
@@ -46,6 +47,12 @@ handle_error() {
     # Restore standard output/error to safely terminate the background logger
     exec 1>&3 2>&4
     sleep 1 # Ensure tee finishes writing buffers to disk
+
+    # Prevent duplicate error notifications from subshell inheritance
+    if [ -f "/tmp/build_failed.lock" ]; then
+        exit 1
+    fi
+    touch "/tmp/build_failed.lock"
 
     echo "❌ CRITICAL: Build failed on line $FAILED_LINE!"
 
@@ -331,6 +338,12 @@ sync_repositories() {
         echo "✅ Custom sources synced."
     else
         echo "⏭️ No custom repos defined for $ROM_NAME. Skipping parallel sync."
+    fi
+
+    # 3. Post-Sync Fixes for Android 13 (spes only)
+    if [ "$DEVICE" == "spes" ]; then
+        echo "🔧 Fixing unrecognized Soong properties for Android 13..."
+        find packages/apps/ViPER4AndroidFX vendor/bcr -name "Android.bp" -exec sed -i '/preprocessed:/d' {} + 2>/dev/null || true
     fi
 }
 
