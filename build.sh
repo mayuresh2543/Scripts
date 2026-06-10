@@ -353,6 +353,32 @@ compile_rom() {
     export BUILD_HOSTNAME=crave
     export TZ="Asia/Kolkata"
 
+    # 📦 Install legacy Ncurses via apt as requested (spes only)
+    if [ "$DEVICE" == "spes" ]; then
+        if ! dpkg -s libncurses5 &> /dev/null; then
+            echo "📦 Installing legacy libncurses5 dependencies via sudo..."
+            sudo apt-get update -y
+            sudo apt-get install -y libncurses5 libtinfo5 || true
+        fi
+        
+        # 🔧 Fallback to System Symlink Hack if apt failed (Ubuntu 24.04 dropped it)
+        if ! dpkg -s libncurses5 &> /dev/null; then
+            echo "🔧 apt failed (likely Ubuntu 24.04). Applying ncurses6 system symlink hack..."
+            NCURSES_LIB=$(find /usr/lib/x86_64-linux-gnu /lib/x86_64-linux-gnu /usr/lib /lib -maxdepth 2 -name "libncurses.so.6*" -print -quit 2>/dev/null)
+            TINFO_LIB=$(find /usr/lib/x86_64-linux-gnu /lib/x86_64-linux-gnu /usr/lib /lib -maxdepth 2 -name "libtinfo.so.6*" -print -quit 2>/dev/null)
+            
+            if [ -n "$NCURSES_LIB" ]; then
+                NCURSES_DIR=$(dirname "$NCURSES_LIB")
+                sudo ln -sf "$NCURSES_LIB" "$NCURSES_DIR/libncurses.so.5"
+            fi
+            if [ -n "$TINFO_LIB" ]; then
+                TINFO_DIR=$(dirname "$TINFO_LIB")
+                sudo ln -sf "$TINFO_LIB" "$TINFO_DIR/libtinfo.so.5"
+            fi
+            sudo ldconfig || true
+        fi
+    fi
+
     # 4. Setup & Lunch
     set +eE   # 🛑 Turn OFF strict mode
     if [ "$DEVICE" == "spes" ]; then
