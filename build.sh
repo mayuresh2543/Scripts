@@ -449,13 +449,24 @@ process_artifacts() {
     FILE_NAME=$(basename "$ROM_ZIP")
     REL_TAG=$(date +%y%m%d)
 
+    # 🕒 Extract precise build datetime from ROM metadata
+    EXTRACT_DIR=$(mktemp -d)
+    unzip -p "$ROM_ZIP" META-INF/com/android/metadata > "$EXTRACT_DIR/metadata.txt" 2>/dev/null || true
+    
+    if grep -q "post-timestamp=" "$EXTRACT_DIR/metadata.txt" 2>/dev/null; then
+        BUILD_DATETIME=$(grep "post-timestamp=" "$EXTRACT_DIR/metadata.txt" | cut -d= -f2 | tr -d '\r')
+        echo "✅ Extracted precise build datetime from zip: $BUILD_DATETIME"
+    else
+        BUILD_DATETIME=$(date +%s)
+        echo "⚠️ Warning: Could not extract precise datetime from zip, using current time: $BUILD_DATETIME"
+    fi
+
     case $ROM_CHOICE in
         1)
             # 🟢 LineageOS Standard Structure
             echo "Generating standard ${DEVICE}.json for LineageOS..."
             FILE_SIZE=$(stat -c %s "$ROM_ZIP")
             FILE_HASH=$(sha256sum "$ROM_ZIP" | awk '{print $1}')
-            BUILD_DATETIME=$(date +%s)
             GH_DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${REL_TAG}/${FILE_NAME}"
             JSON_FILE="${TARGET_DIR}/${DEVICE}.json"
 
@@ -488,7 +499,6 @@ process_artifacts() {
         2)
             # 🔵 YAAP Offset Payload Structure
             echo "Generating payload-nested ${DEVICE}.json for YAAP..."
-            BUILD_DATETIME=$(date +%s)
             JSON_FILE="${TARGET_DIR}/${DEVICE}.json"
 
             # Extract payload properties from inside the zip safely without unpacking the whole ROM
