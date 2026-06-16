@@ -122,8 +122,6 @@ trap 'handle_error $LINENO' ERR
 echo "=========================================="
 echo "🔍 Analyzing Build Request..."
 echo "=========================================="
-
-NEEDS_STANDALONE_ZIP="false"
 MANUAL_REMOVALS=()
 MANUAL_GIT_CLONES=()
 CUSTOM_REPOS=()
@@ -190,19 +188,6 @@ case "$DEVICE" in
                     "https://github.com/LineageOS/android_hardware_xiaomi.git -b lineage-23.2 hardware/xiaomi"
                     "https://github.com/mayuresh-sources/packages_apps_ViPER4AndroidFX.git packages/apps/ViPER4AndroidFX"
                 )
-                ;;
-
-            4)
-                ROM_NAME="Project Matrixx"
-
-                REPO_INIT_URL="https://github.com/ProjectMatrixx/android.git"
-                REPO_INIT_BRANCH="16.2"
-                USE_LOCAL_MANIFEST="true"
-                LOCAL_MANIFEST_BRANCH="matrixx-16"
-                BUILD_TARGET="matrixx_stone-bp4a-user"
-                BUILD_COMMAND="make matrixx"
-
-                NEEDS_STANDALONE_ZIP="true"
                 ;;
 
             *)
@@ -561,19 +546,6 @@ process_artifacts() {
                 echo "⚠️ Warning: Expected Infinity-X JSON at $(basename "$AUTO_JSON") but it was not found."
             fi
             ;;
-
-        4)
-            # 🟣 Project Matrixx Pre-built Structure
-            echo "Locating pre-built OTA JSON for Project Matrixx..."
-            JSON_FILE="vendor/MatrixxOTA/${DEVICE}.json"
-
-            if [ -f "$JSON_FILE" ]; then
-                echo "✅ Found Matrixx OTA JSON: $JSON_FILE"
-                FILES_TO_UPLOAD+=("$JSON_FILE")
-            else
-                echo "⚠️ Warning: Expected Matrixx JSON at $JSON_FILE but it was not found."
-            fi
-            ;;
     esac
 
     # ==========================================
@@ -643,53 +615,16 @@ upload_and_notify() {
     echo "🔗 Master Link: $MASTER_LINK"
 
     # ==========================================
-    # 📦 SECONDARY UPLOAD (Standalone ZIP ONLY)
-    # ==========================================
-    SECONDARY_LINK=""
-    if [ "$NEEDS_STANDALONE_ZIP" == "true" ]; then
-        echo "=========================================="
-        echo "☁️ Performing secondary upload for standalone ROM zip only..."
-        FILE_NAME=$(basename "$ROM_ZIP")
-        echo "⬆️ Uploading standalone zip: $FILE_NAME..."
-
-        # Upload without folder tokens so it gets its own standalone link
-        UPLOAD_RES_2=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
-            -F "file=@${ROM_ZIP}" \
-            "https://${SERVER}.gofile.io/contents/uploadfile" || true)
-
-        STATUS_2=$(echo "$UPLOAD_RES_2" | jq -r '.status' || true)
-
-        if [ "$STATUS_2" == "ok" ]; then
-            echo "✅ Secondary Upload Successful!"
-            SECONDARY_LINK=$(echo "$UPLOAD_RES_2" | jq -r '.data.downloadPage' || true)
-            echo "🔗 Secondary Link (Zip Only): $SECONDARY_LINK"
-        else
-            echo "❌ Secondary upload failed!"
-            handle_error $LINENO
-        fi
-    fi
-
-    # ==========================================
     # 🚀 SEND SUCCESS NOTIFICATION
     # ==========================================
     if [ -n "$MASTER_LINK" ]; then
         echo "📱 Sending 'Build Success' notification..."
 
-        # If secondary link exists (Matrixx), format message with both links
-        if [ -n "$SECONDARY_LINK" ]; then
-            SUCCESS_MSG="BUILD SUCCESSFUL 🚀%0A"
-            SUCCESS_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
-            SUCCESS_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
-            SUCCESS_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
-            SUCCESS_MSG+="├─ 📁 <a href=\"${MASTER_LINK}\">Download Folder (All Files)</a>%0A"
-            SUCCESS_MSG+="└─ 📦 <a href=\"${SECONDARY_LINK}\">Download ROM Zip Only</a>"
-        else
-            SUCCESS_MSG="BUILD SUCCESSFUL 🚀%0A"
-            SUCCESS_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
-            SUCCESS_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
-            SUCCESS_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
-            SUCCESS_MSG+="└─ 🔗 <a href=\"${MASTER_LINK}\">Download on Gofile</a>"
-        fi
+        SUCCESS_MSG="BUILD SUCCESSFUL 🚀%0A"
+        SUCCESS_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
+        SUCCESS_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
+        SUCCESS_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
+        SUCCESS_MSG+="└─ 🔗 <a href=\"${MASTER_LINK}\">Download on Gofile</a>"
 
         send_tg_msg "$SUCCESS_MSG"
         echo "✅ Notification sent!"
