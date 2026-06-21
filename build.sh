@@ -197,18 +197,6 @@ case "$DEVICE" in
                 )
                 ;;
 
-            4)
-                ROM_NAME="LumineDroid"
-                GH_REPO="mayuresh-releases/Lumine_stone"
-
-                REPO_INIT_URL="https://github.com/LumineDroid/platform_manifest"
-                REPO_INIT_BRANCH="camellia"
-                USE_LOCAL_MANIFEST="true"
-                LOCAL_MANIFEST_BRANCH="lumine-17"
-                BUILD_TARGET="stone-cp2a-userdebug"
-                BUILD_COMMAND="m bacon"
-                ;;
-
             *)
                 echo "❌ Invalid ROM choice for stone!"
                 handle_error $LINENO
@@ -571,11 +559,6 @@ process_artifacts() {
             else
                 echo "⚠️ Warning: Expected Infinity-X JSON at $(basename "$AUTO_JSON") but it was not found."
             fi
-            ;;
-
-        4)
-            # ⚪ LumineDroid (JSON generation skipped for now)
-            echo "⏭️ Skipping OTA JSON generation for LumineDroid as requested."
             ;;
     esac
 
