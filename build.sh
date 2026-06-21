@@ -103,10 +103,12 @@ handle_error() {
     fi
 
     local DISPLAY_ROM="${ROM_NAME:-Unknown}"
+    local DISPLAY_ANDROID="${ANDROID_VERSION:-Unknown}"
     
     local FAIL_MSG="BUILD FAILED ❌%0A"
     FAIL_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
     FAIL_MSG+="├─ 💿 <b>ROM:</b> ${DISPLAY_ROM}%0A"
+    FAIL_MSG+="├─ 🤖 <b>Android:</b> ${DISPLAY_ANDROID}%0A"
     FAIL_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
     FAIL_MSG+="├─ ⚠️ <b>Error:</b> Line ${FAILED_LINE}"
     
@@ -138,6 +140,7 @@ case "$DEVICE" in
         case "$ROM_CHOICE" in
             1)
                 ROM_NAME="LineageOS 23.2"
+                ANDROID_VERSION="16-QPR2"
                 ROM_VERSION="23.2"
                 GH_REPO="mayuresh-releases/LineageOS_stone"
 
@@ -161,6 +164,7 @@ case "$DEVICE" in
 
             2)
                 ROM_NAME="YAAP 16.2"
+                ANDROID_VERSION="16-QPR2"
                 GH_REPO="mayuresh-releases/YAAP_stone"
 
                 REPO_INIT_URL="https://github.com/yaap/manifest.git"
@@ -178,6 +182,7 @@ case "$DEVICE" in
 
             3)
                 ROM_NAME="Infinity-X"
+                ANDROID_VERSION="16-QPR2"
                 GH_REPO="mayuresh-releases/Infinity-X_stone"
 
                 REPO_INIT_URL="https://github.com/projectinfinity-X/manifest"
@@ -199,6 +204,7 @@ case "$DEVICE" in
 
             4)
                 ROM_NAME="Statix"
+                ANDROID_VERSION="17"
                 GH_REPO="mayuresh-releases/Statix_stone"
 
                 REPO_INIT_URL="https://github.com/stx-staging/android_manifest"
@@ -219,6 +225,7 @@ case "$DEVICE" in
         case "$ROM_CHOICE" in
             1)
                 ROM_NAME="LineageOS 20"
+                ANDROID_VERSION="13"
                 ROM_VERSION="20.0"
                 GH_REPO="mayuresh-releases/LineageOS_spes"
 
@@ -255,6 +262,7 @@ esac
 
 echo "✅ Selected Device: $DEVICE"
 echo "✅ Selected ROM: $ROM_NAME"
+echo "✅ Android Version: ${ANDROID_VERSION:-Unknown}"
 
 # ==========================================
 # 🛠️ Modular Execution Functions
@@ -265,6 +273,7 @@ send_start_notification() {
     START_MSG="BUILD STARTED ⏳%0A"
     START_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
     START_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
+    START_MSG+="├─ 🤖 <b>Android:</b> ${ANDROID_VERSION}%0A"
     START_MSG+="└─ 💻 <b>Host:</b> ${BUILD_HOSTNAME}"
     send_tg_msg "$START_MSG"
 }
@@ -662,6 +671,7 @@ upload_and_notify() {
         SUCCESS_MSG="BUILD SUCCESSFUL 🚀%0A"
         SUCCESS_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
         SUCCESS_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
+        SUCCESS_MSG+="├─ 🤖 <b>Android:</b> ${ANDROID_VERSION}%0A"
         SUCCESS_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
         SUCCESS_MSG+="└─ 🔗 <a href=\"${MASTER_LINK}\">Download on Gofile</a>"
 
