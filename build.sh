@@ -197,6 +197,17 @@ case "$DEVICE" in
                 )
                 ;;
 
+            4)
+                ROM_NAME="Statix"
+                GH_REPO="mayuresh-releases/Statix_stone"
+
+                REPO_INIT_URL="https://github.com/stx-staging/android_manifest"
+                REPO_INIT_BRANCH="cp2a"
+                USE_LOCAL_MANIFEST="false"
+                LOCAL_MANIFEST_BRANCH=""
+                BUILD_COMMAND="brunch statix_stone-cp2a-userdebug"
+                ;;
+
             *)
                 echo "❌ Invalid ROM choice for stone!"
                 handle_error $LINENO
@@ -385,17 +396,26 @@ compile_rom() {
     else
         source build/envsetup.sh
     fi
-    lunch "$BUILD_TARGET"
-    set -eE   # 🟢 Turn strict mode back ON for the actual compilation
+    if [ -n "$BUILD_TARGET" ]; then
+        lunch "$BUILD_TARGET"
+        set -eE   # 🟢 Turn strict mode back ON for the actual compilation
 
-    # 5. Prep the output directory
-    echo "Cleaning output directory..."
-    m installclean
+        # 5. Prep the output directory
+        echo "Cleaning output directory..."
+        m installclean
+    else
+        set -eE
+        echo "⏭️ Skipping lunch and installclean as requested (using full build command)..."
+    fi
 
     # 6. Compilation with Logging
     echo "=========================================="
     echo "🔨 Starting compilation for $ROM_NAME..."
-    echo "🚀 Initiating Build for $BUILD_TARGET..."
+    if [ -n "$BUILD_TARGET" ]; then
+        echo "🚀 Initiating Build for $BUILD_TARGET..."
+    else
+        echo "🚀 Initiating Build..."
+    fi
     echo "=========================================="
 
     # Dynamically run whatever command the ROM needs
@@ -559,6 +579,11 @@ process_artifacts() {
             else
                 echo "⚠️ Warning: Expected Infinity-X JSON at $(basename "$AUTO_JSON") but it was not found."
             fi
+            ;;
+
+        4)
+            # ⚪ Statix (JSON generation skipped for now)
+            echo "⏭️ Skipping OTA JSON generation for Statix as requested."
             ;;
     esac
 
