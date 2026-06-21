@@ -9,6 +9,13 @@ START_TIME=$(date +%s)
 LOG_FILE="build_${DEVICE}_$(date +%Y%m%d_%H%M).log"
 rm -f "/tmp/build_failed.lock"
 
+export BUILD_USERNAME="mayuresh"
+if [ -d "/opt/crave" ]; then
+    export BUILD_HOSTNAME="crave"
+else
+    export BUILD_HOSTNAME=$(hostname)
+fi
+
 # ==========================================
 # 📝 Setup Full-Script Logging
 # ==========================================
@@ -259,7 +266,7 @@ send_start_notification() {
     START_MSG="BUILD STARTED ⏳%0A"
     START_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
     START_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
-    START_MSG+="└─ 💻 <b>Host:</b> Crave"
+    START_MSG+="└─ 💻 <b>Host:</b> ${BUILD_HOSTNAME}"
     send_tg_msg "$START_MSG"
 }
 
@@ -355,8 +362,6 @@ sync_repositories() {
 
 compile_rom() {
     # 3. Environment Variables
-    export BUILD_USERNAME=mayuresh
-    export BUILD_HOSTNAME=crave
     export TZ="Asia/Kolkata"
 
     # 📦 Install legacy Ncurses via apt as requested (spes only)
