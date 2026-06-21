@@ -273,7 +273,16 @@ sync_repositories() {
         /opt/crave/resync.sh
     else
         echo "🚀 Running standard repo sync..."
-        repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j$(nproc --all)
+        for i in {1..3}; do
+            repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j$(nproc --all) && break || {
+                if [ $i -eq 3 ]; then
+                    echo "❌ Repo sync failed after 3 attempts."
+                    handle_error $LINENO
+                fi
+                echo "⚠️ repo sync failed, retrying in 30 seconds... ($i/3)"
+                sleep 30
+            }
+        done
     fi
 
     # 1.4 Execute Manual Removals (If any are defined)
