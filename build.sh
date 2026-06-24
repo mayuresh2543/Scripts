@@ -507,19 +507,21 @@ process_artifacts() {
               --arg sz "$FILE_SIZE" \
               --arg url "$GH_DOWNLOAD_URL" \
               --arg ver "$ROM_VERSION" \
-              '{
-                response: [
-                  {
-                    datetime: ($dt | tonumber),
-                    filename: $fn,
-                    id: $id,
-                    romtype: $rt,
-                    size: ($sz | tonumber),
-                    url: $url,
-                    version: $ver
-                  }
-                ]
-              }' > "$JSON_FILE"
+              '[
+                {
+                  datetime: ($dt | tonumber),
+                  type: $rt,
+                  version: $ver,
+                  files: [
+                    {
+                      filename: $fn,
+                      sha256: $id,
+                      size: ($sz | tonumber),
+                      url: $url
+                    }
+                  ]
+                }
+              ]' > "$JSON_FILE"
 
             echo "✅ Created $JSON_FILE"
             FILES_TO_UPLOAD+=("$JSON_FILE")
