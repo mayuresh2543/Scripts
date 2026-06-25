@@ -67,7 +67,7 @@ handle_error() {
     
     # Try to upload the log file if it exists
     if [ -n "$LOG_FILE" ] && [ -f "$LOG_FILE" ]; then
-        if command -v gzip &> /dev/null; then
+        if command -v gzip &> /dev/null && [[ "$LOG_FILE" != *.gz ]]; then
             echo "🗜️ Compressing crash log..."
             gzip -9 "$LOG_FILE"
             LOG_FILE="${LOG_FILE}.gz"
@@ -119,6 +119,12 @@ handle_error() {
     fi
 
     send_tg_msg "$FAIL_MSG"
+    
+    if [ -f "$LOG_FILE" ]; then
+        echo "🧹 Deleting error log $LOG_FILE to save space..."
+        rm -f "$LOG_FILE"
+    fi
+    
     exit 1
 }
 
@@ -709,3 +715,9 @@ fi
 FILES_TO_UPLOAD+=("$LOG_FILE")
 
 upload_and_notify
+
+# Clean up log file to save space
+if [ -f "$LOG_FILE" ]; then
+    echo "🧹 Deleting log file $LOG_FILE to save space..."
+    rm -f "$LOG_FILE"
+fi
