@@ -616,6 +616,35 @@ process_artifacts() {
             echo "⚠️ Warning: $IMG not found. Skipping."
         fi
     done
+
+    # ==========================================
+    # Generate Changelog from Gerrit
+    # ==========================================
+    if [[ "$ROM_NAME" == *"LineageOS"* ]] && { [ "$DEVICE" == "stone" ] || [ "$DEVICE" == "spes" ]; }; then
+        echo "=========================================="
+        echo "📝 Generating Changelog from LineageOS Gerrit..."
+        local branch="$REPO_INIT_BRANCH"
+        if [ -z "$branch" ]; then
+            branch="lineage-23.2"
+        fi
+
+        echo "# LineageOS Changelog (${branch})" > source_changelog.txt
+        echo "Generated on $(date)" >> source_changelog.txt
+        echo "" >> source_changelog.txt
+        
+        if curl -s -G "https://review.lineageos.org/changes/" --data-urlencode "q=status:merged branch:${branch} -project:^.*_device_.* -project:^.*_kernel_.*" -d "n=200" | sed '1d' | jq -r 'group_by(.project) | .[] | "### " + .[0].project + "\n" + (map("- [" + ((.submitted // .updated // "Unknown") | .[0:10]) + "] " + .subject) | join("\n")) + "\n"' >> source_changelog.txt; then
+            if [ -s source_changelog.txt ]; then
+                echo "✅ Changelog saved to source_changelog.txt"
+                FILES_TO_UPLOAD+=("source_changelog.txt")
+            else
+                echo "⚠️ Gerrit API returned empty or failed to parse."
+            fi
+        else
+            echo "⚠️ Failed to fetch changelog from Gerrit."
+        fi
+    else
+        echo "ℹ️ Skipping Changelog generation (Not LineageOS on stone/spes)"
+    fi
 }
 
 upload_and_notify() {
@@ -682,6 +711,21 @@ upload_and_notify() {
         SUCCESS_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
         SUCCESS_MSG+="├─ 🤖 <b>Android:</b> ${ANDROID_VERSION}%0A"
         SUCCESS_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
+
+        if [ -s source_changelog.txt ]; then
+            CHANGELOG_URL=""
+            
+            # Upload changelog to paste.rs for a raw text preview link (GitHub Raw style)
+            RES=$(curl -s --max-time 10 --data-binary @source_changelog.txt https://paste.rs/ || true)
+            if [[ "$RES" == http* ]]; then
+                CHANGELOG_URL=$(echo -n "$RES" | tr -d '\n\r')
+            fi
+
+            if [ -n "$CHANGELOG_URL" ]; then
+                SUCCESS_MSG+="├─ 📜 <b>Changelog:</b> <a href=\"${CHANGELOG_URL}\">View Latest Changes</a>%0A"
+            fi
+        fi
+
         SUCCESS_MSG+="└─ 🔗 <a href=\"${MASTER_LINK}\">Download on Gofile</a>"
 
         send_tg_msg "$SUCCESS_MSG"
