@@ -202,23 +202,11 @@ case "$DEVICE" in
                 MANUAL_GIT_CLONES=(
                     "https://github.com/Infinity-X-Devices/device_xiaomi_stone.git device/xiaomi/stone"
                     "https://github.com/Infinity-X-Devices/vendor_xiaomi_stone.git vendor/xiaomi/stone"
-                    "https://github.com/Infinity-X-Devices/kernel_xiaomi_stone.git kernel/xiaomi/stone"
+                    "https://github.com/mayuresh2543/kernel_xiaomi_stone_rebase.git kernel/xiaomi/stone"
                     "https://github.com/mayuresh-sources/hardware_dolby.git -b sony-1.0 hardware/dolby"
                     "https://github.com/LineageOS/android_hardware_xiaomi.git -b lineage-23.2 hardware/xiaomi"
                     "https://github.com/mayuresh-sources/packages_apps_ViPER4AndroidFX.git packages/apps/ViPER4AndroidFX"
                 )
-                ;;
-
-            4)
-                ROM_NAME="Statix"
-                ANDROID_VERSION="17"
-                GH_REPO="mayuresh-releases/Statix_stone"
-
-                REPO_INIT_URL="https://github.com/stx-staging/android_manifest"
-                REPO_INIT_BRANCH="cp2a"
-                USE_LOCAL_MANIFEST="false"
-                LOCAL_MANIFEST_BRANCH=""
-                BUILD_COMMAND="brunch statix_stone-cp2a-userdebug"
                 ;;
 
             *)
@@ -599,10 +587,6 @@ process_artifacts() {
             fi
             ;;
 
-        4)
-            # ⚪ Statix (JSON generation skipped for now)
-            echo "⏭️ Skipping OTA JSON generation for Statix as requested."
-            ;;
     esac
 
     # ==========================================
@@ -632,7 +616,7 @@ process_artifacts() {
         echo "Generated on $(date)" >> source_changelog.txt
         echo "" >> source_changelog.txt
         
-        if curl -s -G "https://review.lineageos.org/changes/" --data-urlencode "q=status:merged branch:${branch} -project:^.*_device_.* -project:^.*_kernel_.*" -d "n=200" | sed '1d' | jq -r 'group_by(.project) | .[] | "### " + .[0].project + "\n" + (map("- [" + ((.submitted // .updated // "Unknown") | .[0:10]) + "] " + .subject) | join("\n")) + "\n"' >> source_changelog.txt; then
+        if curl -s -G "https://review.lineageos.org/changes/" --data-urlencode "q=status:merged branch:${branch} -project:^.*_device_.* -project:^.*_kernel_.*" -d "n=200" | sed '1d' | jq -r 'group_by(.project) | sort_by(.[0].submitted // .[0].updated // "") | reverse | .[] | "### " + .[0].project + "\n" + (map("- [" + ((.submitted // .updated // "Unknown") | .[0:10]) + "] " + .subject) | join("\n")) + "\n"' >> source_changelog.txt; then
             if [ -s source_changelog.txt ]; then
                 echo "✅ Changelog saved to source_changelog.txt"
                 FILES_TO_UPLOAD+=("source_changelog.txt")
