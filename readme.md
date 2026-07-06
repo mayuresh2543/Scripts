@@ -27,6 +27,11 @@ crave run --no-patch -- "curl -s https://raw.githubusercontent.com/mayuresh2543/
 crave run --no-patch -- "curl -s https://raw.githubusercontent.com/mayuresh2543/Scripts/refs/heads/16/build.sh | bash -s stone 3"
 ```
 
+**AviumUI 16.2**
+```bash
+crave run --no-patch -- "curl -s https://raw.githubusercontent.com/mayuresh2543/Scripts/refs/heads/16/build.sh | bash -s stone 4"
+```
+
 
 
 ### 📱 Xiaomi Redmi Note 11 (`spes`)
