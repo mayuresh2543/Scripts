@@ -9,7 +9,7 @@ else
     export BUILD_HOSTNAME=$(hostname)
 fi
 
-TELEGRAM_TOKEN="8801527482:AAGiuNQtKJka2bbOxeZap25PDsgYEoK77AQ"
+TELEGRAM_TOKEN="8801527482:AAF5qe0lz8eeJrpNVihctDcdaVox8dnJdjg"
 TELEGRAM_CHAT_ID="-1003914151464"
 
 send_tg_msg() {
