@@ -140,7 +140,7 @@ process_artifacts() {
     rm -rf "$EXTRACT_DIR"
 
     case $ROM_CHOICE in
-        1)
+        1|4)
             # 🟢 LineageOS Standard Structure
             echo "Generating standard ${DEVICE}.json for LineageOS..."
             FILE_SIZE=$(stat -c %s "$ROM_ZIP")
