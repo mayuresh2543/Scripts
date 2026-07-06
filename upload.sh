@@ -34,64 +34,21 @@ case "$DEVICE" in
                 ANDROID_VERSION="16-QPR2"
                 ROM_VERSION="23.2"
                 GH_REPO="mayuresh-releases/LineageOS_stone"
-
-                REPO_INIT_URL="https://github.com/LineageOS/android.git"
                 REPO_INIT_BRANCH="lineage-23.2"
-                USE_LOCAL_MANIFEST="true"
-                LOCAL_MANIFEST_BRANCH="lineage-16"
-                BUILD_TARGET="lineage_stone-bp4a-userdebug"
-                BUILD_COMMAND="m bacon"
-
-                CUSTOM_REPOS=(
-                    "packages/apps/Updater|lineage_qpr2_packages_apps_Updater"
-                    "packages/apps/Launcher3|lineage_qpr2_packages_apps_Launcher3"
-                    "frameworks/native|lineage_qpr2_frameworks_native"
-                    "frameworks/base|lineage_qpr2_frameworks_base"
-                    "bionic|lineage_qpr2_bionic"
-                    "art|lineage_qpr2_from-aosp_art"
-                    "frameworks/libs/systemui|lineage_qpr2_frameworks_libs_systemui"
-                    "vendor/lineage|lineage_qpr2_vendor_lineage"
-                )
                 ;;
 
             2)
                 ROM_NAME="YAAP 16.2"
                 ANDROID_VERSION="16-QPR2"
                 GH_REPO="mayuresh-releases/YAAP_stone"
-
-                REPO_INIT_URL="https://github.com/yaap/manifest.git"
                 REPO_INIT_BRANCH="sixteen"
-                USE_LOCAL_MANIFEST="true"
-                LOCAL_MANIFEST_BRANCH="yaap-16"
-                BUILD_TARGET="yaap_stone-userdebug"
-                BUILD_COMMAND="m yaap"
-
-                CUSTOM_REPOS=(
-                    "build/soong|yaap_build_soong"
-                    "build/make|yaap_build_make"
-                )
                 ;;
 
             3)
                 ROM_NAME="Infinity-X"
                 ANDROID_VERSION="16-QPR2"
                 GH_REPO="mayuresh-releases/Infinity-X_stone"
-
-                REPO_INIT_URL="https://github.com/projectinfinity-X/manifest"
                 REPO_INIT_BRANCH="16"
-                USE_LOCAL_MANIFEST="false"
-                LOCAL_MANIFEST_BRANCH=""
-                BUILD_TARGET="infinity_stone-userdebug"
-                BUILD_COMMAND="m bacon"
-
-                MANUAL_GIT_CLONES=(
-                    "https://github.com/Infinity-X-Devices/device_xiaomi_stone.git device/xiaomi/stone"
-                    "https://github.com/Infinity-X-Devices/vendor_xiaomi_stone.git vendor/xiaomi/stone"
-                    "https://github.com/mayuresh2543/kernel_xiaomi_stone_rebase.git kernel/xiaomi/stone"
-                    "https://github.com/mayuresh-sources/hardware_dolby.git -b sony-1.0 hardware/dolby"
-                    "https://github.com/LineageOS/android_hardware_xiaomi.git -b lineage-23.2 hardware/xiaomi"
-                    "https://github.com/mayuresh-sources/packages_apps_ViPER4AndroidFX.git packages/apps/ViPER4AndroidFX"
-                )
                 ;;
 
             *)
@@ -108,23 +65,7 @@ case "$DEVICE" in
                 ANDROID_VERSION="13"
                 ROM_VERSION="20.0"
                 GH_REPO="mayuresh-releases/LineageOS_spes"
-
-                REPO_INIT_URL="https://github.com/LineageOS/android.git"
                 REPO_INIT_BRANCH="lineage-20.0"
-                USE_LOCAL_MANIFEST="true"
-                LOCAL_MANIFEST_BRANCH="spes-13"
-                BUILD_TARGET="lineage_spes-userdebug"
-                BUILD_COMMAND="m bacon"
-
-                MANUAL_REMOVALS=(
-                    "hardware/google/pixel/kernel_headers/Android.bp"
-                    "hardware/lineage/compat/Android.bp"
-                )
-
-                CUSTOM_REPOS=(
-                    "packages/apps/Updater|lineage_packages_apps_Updater"
-                    "build/make|lineage_android_build"
-                )
                 ;;
 
             *)
@@ -143,7 +84,6 @@ esac
 echo "✅ Selected Device: $DEVICE"
 echo "✅ Selected ROM: $ROM_NAME"
 echo "✅ Android Version: ${ANDROID_VERSION:-Unknown}"
-
 
 process_artifacts() {
     # ==========================================
