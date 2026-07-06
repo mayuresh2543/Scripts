@@ -51,6 +51,14 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="16"
                 ;;
 
+            4)
+                ROM_NAME="LineageOS 24.0"
+                ANDROID_VERSION="17"
+                ROM_VERSION="24.0"
+                GH_REPO="mayuresh-releases/LineageOS_stone"
+                REPO_INIT_BRANCH="lineage-24.0"
+                ;;
+
             *)
                 echo "❌ Invalid ROM choice for stone!"
                 handle_error $LINENO
