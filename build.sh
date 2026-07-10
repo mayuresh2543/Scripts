@@ -80,13 +80,23 @@ handle_error() {
         fi
         
         if command -v jq &> /dev/null; then
-            local SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
+            local SERVER=$(curl -s --connect-timeout 5 https://api.gofile.io/servers | jq -r '.data.servers[0].name' || true)
             if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
                 local UPLOAD_RES=$(curl -s -F "file=@${LOG_FILE}" "https://${SERVER}.gofile.io/contents/uploadfile")
                 local STATUS=$(echo "$UPLOAD_RES" | jq -r '.status')
                 if [ "$STATUS" == "ok" ]; then
                     LOG_LINK=$(echo "$UPLOAD_RES" | jq -r '.data.downloadPage')
-                    echo "✅ Error log uploaded successfully!"
+                    echo "✅ Error log uploaded successfully to Gofile!"
+                fi
+            else
+                echo "⚠️ Gofile API is down. Falling back to Pixeldrain for error log..."
+                local PIXELDRAIN_API_KEY="89f5f646-bd8e-4210-826e-33f69930e0f7"
+                local UPLOAD_RES=$(curl -s -u ":$PIXELDRAIN_API_KEY" -F "file=@${LOG_FILE}" "https://pixeldrain.com/api/file")
+                local SUCCESS=$(echo "$UPLOAD_RES" | jq -r '.success')
+                if [ "$SUCCESS" == "true" ]; then
+                    local FILE_ID=$(echo "$UPLOAD_RES" | jq -r '.id')
+                    LOG_LINK="https://pixeldrain.com/u/$FILE_ID"
+                    echo "✅ Error log uploaded successfully to Pixeldrain!"
                 fi
             fi
         fi
@@ -680,53 +690,104 @@ process_artifacts() {
 
 upload_and_notify() {
     echo "------------------------------------------"
-    SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name' || true)
+    SERVER=$(curl -s --connect-timeout 5 https://api.gofile.io/servers | jq -r '.data.servers[0].name' || true)
+    USE_PIXELDRAIN=false
+    PIXELDRAIN_API_KEY="89f5f646-bd8e-4210-826e-33f69930e0f7"
 
     if [ -z "$SERVER" ] || [ "$SERVER" == "null" ]; then
-        echo "❌ Failed to fetch a Gofile server. API might be down."
-        handle_error $LINENO
+        echo "⚠️ Failed to fetch a Gofile server. API might be down. Falling back to Pixeldrain..."
+        USE_PIXELDRAIN=true
+    else
+        echo "☁️ Uploading to Gofile Server: $SERVER"
     fi
-
-    echo "☁️ Uploading to Server: $SERVER"
     echo "------------------------------------------"
 
     MASTER_LINK=""
     GUEST_TOKEN=""
     FOLDER_ID=""
+    UPLOADED_IDS=()
 
     for FILE_PATH in "${FILES_TO_UPLOAD[@]}"; do
         FILE_NAME=$(basename "$FILE_PATH")
         echo "⬆️ Uploading $FILE_NAME..."
 
-        if [ -n "$GUEST_TOKEN" ] && [ -n "$FOLDER_ID" ]; then
+        if [ "$USE_PIXELDRAIN" == "true" ]; then
             UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
-                -F "token=$GUEST_TOKEN" \
-                -F "folderId=$FOLDER_ID" \
+                -u ":$PIXELDRAIN_API_KEY" \
                 -F "file=@${FILE_PATH}" \
-                "https://${SERVER}.gofile.io/contents/uploadfile" || true)
-        else
-            UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
-                -F "file=@${FILE_PATH}" \
-                "https://${SERVER}.gofile.io/contents/uploadfile" || true)
-        fi
+                "https://pixeldrain.com/api/file" || true)
 
-        STATUS=$(echo "$UPLOAD_RES" | jq -r '.status' || true)
+            SUCCESS=$(echo "$UPLOAD_RES" | jq -r '.success' || true)
 
-        if [ "$STATUS" == "ok" ]; then
-            echo "✅ Uploaded!"
-
-            if [ -z "$GUEST_TOKEN" ]; then
-                MASTER_LINK=$(echo "$UPLOAD_RES" | jq -r '.data.downloadPage' || true)
-                GUEST_TOKEN=$(echo "$UPLOAD_RES" | jq -r '.data.guestToken' || true)
-                FOLDER_ID=$(echo "$UPLOAD_RES" | jq -r '.data.parentFolder' || true)
-                echo "📁 Folder created! Grouping remaining files here..."
+            if [ "$SUCCESS" == "true" ]; then
+                FILE_ID=$(echo "$UPLOAD_RES" | jq -r '.id' || true)
+                UPLOADED_IDS+=("$FILE_ID")
+                echo "✅ Uploaded! ID: $FILE_ID"
+            else
+                echo "❌ Failed to upload $FILE_NAME to Pixeldrain"
+                echo "Response: $UPLOAD_RES"
+                handle_error $LINENO
             fi
         else
-            echo "❌ Failed to upload $FILE_NAME"
-            handle_error $LINENO
+            if [ -n "$GUEST_TOKEN" ] && [ -n "$FOLDER_ID" ]; then
+                UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
+                    -F "token=$GUEST_TOKEN" \
+                    -F "folderId=$FOLDER_ID" \
+                    -F "file=@${FILE_PATH}" \
+                    "https://${SERVER}.gofile.io/contents/uploadfile" || true)
+            else
+                UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
+                    -F "file=@${FILE_PATH}" \
+                    "https://${SERVER}.gofile.io/contents/uploadfile" || true)
+            fi
+
+            STATUS=$(echo "$UPLOAD_RES" | jq -r '.status' || true)
+
+            if [ "$STATUS" == "ok" ]; then
+                echo "✅ Uploaded!"
+
+                if [ -z "$GUEST_TOKEN" ]; then
+                    MASTER_LINK=$(echo "$UPLOAD_RES" | jq -r '.data.downloadPage' || true)
+                    GUEST_TOKEN=$(echo "$UPLOAD_RES" | jq -r '.data.guestToken' || true)
+                    FOLDER_ID=$(echo "$UPLOAD_RES" | jq -r '.data.parentFolder' || true)
+                    echo "📁 Folder created! Grouping remaining files here..."
+                fi
+            else
+                echo "❌ Failed to upload $FILE_NAME"
+                handle_error $LINENO
+            fi
         fi
         echo "------------------------------------------"
     done
+
+    if [ "$USE_PIXELDRAIN" == "true" ] && [ ${#UPLOADED_IDS[@]} -gt 0 ]; then
+        echo "📁 Creating Pixeldrain List (Folder)..."
+        
+        FILES_JSON="["
+        for i in "${!UPLOADED_IDS[@]}"; do
+            FILES_JSON+="{\"id\":\"${UPLOADED_IDS[$i]}\", \"description\":\"\"}"
+            if [ $i -lt $((${#UPLOADED_IDS[@]} - 1)) ]; then
+                FILES_JSON+=","
+            fi
+        done
+        FILES_JSON+="]"
+
+        LIST_RES=$(curl -s -X POST -u ":$PIXELDRAIN_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"title\": \"$ROM_NAME Update\", \"files\": $FILES_JSON}" \
+            "https://pixeldrain.com/api/list" || true)
+
+        LIST_SUCCESS=$(echo "$LIST_RES" | jq -r '.success' || true)
+        
+        if [ "$LIST_SUCCESS" == "true" ]; then
+            LIST_ID=$(echo "$LIST_RES" | jq -r '.id' || true)
+            MASTER_LINK="https://pixeldrain.com/l/$LIST_ID"
+            echo "✅ Folder created successfully!"
+        else
+            echo "⚠️ Failed to create folder list. Fallback to single file link."
+            MASTER_LINK="https://pixeldrain.com/u/${UPLOADED_IDS[0]}"
+        fi
+    fi
 
     echo "🎉 Main uploads complete for $ROM_NAME!"
     echo "🔗 Master Link: $MASTER_LINK"
