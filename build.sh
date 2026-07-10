@@ -412,11 +412,7 @@ compile_rom() {
 
     # 4. Setup & Lunch
     set +eE   # 🛑 Turn OFF strict mode
-    if [ "$DEVICE" == "spes" ]; then
-        . build/envsetup.sh
-    else
-        source build/envsetup.sh
-    fi
+    source build/envsetup.sh
     if [ -n "$BUILD_TARGET" ]; then
         lunch "$BUILD_TARGET"
         set -eE   # 🟢 Turn strict mode back ON for the actual compilation
