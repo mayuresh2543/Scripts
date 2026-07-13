@@ -169,6 +169,7 @@ case "$DEVICE" in
 
                 CUSTOM_REPOS=(
                     "packages/apps/Updater|lineage_qpr2_packages_apps_Updater"
+                    "packages/apps/Settings|lineage_qpr2_packages_apps_Settings"
                     "packages/apps/Launcher3|lineage_qpr2_packages_apps_Launcher3"
                     "frameworks/native|lineage_qpr2_frameworks_native"
                     "frameworks/base|lineage_qpr2_frameworks_base"
