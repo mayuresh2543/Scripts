@@ -224,23 +224,6 @@ case "$DEVICE" in
                 )
                 ;;
 
-            4)
-                ROM_NAME="AviumUI 16.2"
-                ANDROID_VERSION="16-QPR2"
-                ROM_VERSION="16"
-                GH_REPO="mayuresh-releases/Avium_stone"
-
-                REPO_INIT_URL="https://github.com/AviumUI/android_manifests"
-                REPO_INIT_BRANCH="avium-16.2"
-                USE_LOCAL_MANIFEST="true"
-                LOCAL_MANIFEST_BRANCH="avium-16"
-                BUILD_TARGET="lineage_stone-bp4a-userdebug"
-                BUILD_COMMAND="m bacon"
-
-                CUSTOM_REPOS=(
-                    "packages/apps/Updater|avium_packages_apps_Updater"
-                )
-                ;;
 
             *)
                 echo "❌ Invalid ROM choice for stone!"
@@ -616,39 +599,6 @@ process_artifacts() {
             fi
             ;;
 
-        4)
-            # 🟣 AviumUI Structure
-            echo "Generating ${DEVICE}.json for AviumUI..."
-            FILE_SIZE=$(stat -c %s "$ROM_ZIP")
-            # Calculate SHA1 as requested/implied by 40-char hash in example, or we can use sha256sum but just assign to id.
-            # I will use sha1sum based on the hash length in the user's example
-            FILE_HASH=$(sha1sum "$ROM_ZIP" | awk '{print $1}')
-            GH_DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${REL_TAG}/${FILE_NAME}"
-            JSON_FILE="${TARGET_DIR}/${DEVICE}.json"
-
-            jq -n \
-              --arg dt "$BUILD_DATETIME" \
-              --arg fn "$FILE_NAME" \
-              --arg id "$FILE_HASH" \
-              --arg sz "$FILE_SIZE" \
-              --arg url "$GH_DOWNLOAD_URL" \
-              --arg ver "$ROM_VERSION" \
-              '{
-                response: [
-                  {
-                    datetime: ($dt | tonumber),
-                    filename: $fn,
-                    id: $id,
-                    size: ($sz | tonumber),
-                    url: $url,
-                    version: $ver
-                  }
-                ]
-              }' > "$JSON_FILE"
-
-            echo "✅ Created $JSON_FILE"
-            FILES_TO_UPLOAD+=("$JSON_FILE")
-            ;;
 
     esac
 
