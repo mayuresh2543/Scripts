@@ -121,7 +121,7 @@ handle_error() {
     local DISPLAY_ANDROID="${ANDROID_VERSION:-Unknown}"
     
     local FAIL_MSG="BUILD FAILED ❌%0A"
-    FAIL_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
+    FAIL_MSG+="├─ 📱 <b>Device:</b> ${DEVICE_NAME}%0A"
     FAIL_MSG+="├─ 💿 <b>ROM:</b> ${DISPLAY_ROM}%0A"
     FAIL_MSG+="├─ 🤖 <b>Android:</b> ${DISPLAY_ANDROID}%0A"
     FAIL_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
@@ -158,6 +158,7 @@ CUSTOM_REPOS=()
 
 case "$DEVICE" in
     "stone")
+        DEVICE_NAME="Redmi Note 12 5G / Poco X5 5G (stone)"
         case "$ROM_CHOICE" in
             1)
                 ROM_NAME="LineageOS 23.2"
@@ -233,6 +234,7 @@ case "$DEVICE" in
         ;;
 
     "spes")
+        DEVICE_NAME="Redmi Note 11 (spes)"
         case "$ROM_CHOICE" in
             1)
                 ROM_NAME="LineageOS 20"
@@ -282,7 +284,7 @@ echo "✅ Android Version: ${ANDROID_VERSION:-Unknown}"
 send_start_notification() {
     echo "📱 Sending 'Build Started' notification..."
     START_MSG="BUILD STARTED ⏳%0A"
-    START_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
+    START_MSG+="├─ 📱 <b>Device:</b> ${DEVICE_NAME}%0A"
     START_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
     START_MSG+="├─ 🤖 <b>Android:</b> ${ANDROID_VERSION}%0A"
     START_MSG+="└─ 💻 <b>Host:</b> ${BUILD_HOSTNAME}"
@@ -772,7 +774,7 @@ upload_and_notify() {
         echo "📱 Sending 'Build Success' notification..."
 
         SUCCESS_MSG="BUILD SUCCESSFUL 🚀%0A"
-        SUCCESS_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
+        SUCCESS_MSG+="├─ 📱 <b>Device:</b> ${DEVICE_NAME}%0A"
         SUCCESS_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
         SUCCESS_MSG+="├─ 🤖 <b>Android:</b> ${ANDROID_VERSION}%0A"
         SUCCESS_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"

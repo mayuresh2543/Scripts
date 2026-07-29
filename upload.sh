@@ -28,6 +28,7 @@ trap 'handle_error $LINENO' ERR
 
 case "$DEVICE" in
     "stone")
+        DEVICE_NAME="Redmi Note 12 5G / Poco X5 5G (stone)"
         case "$ROM_CHOICE" in
             1)
                 ROM_NAME="LineageOS 23.2"
@@ -67,6 +68,7 @@ case "$DEVICE" in
         ;;
 
     "spes")
+        DEVICE_NAME="Redmi Note 11 (spes)"
         case "$ROM_CHOICE" in
             1)
                 ROM_NAME="LineageOS 20"
@@ -413,7 +415,7 @@ upload_and_notify() {
         echo "📱 Sending 'Build Success' notification..."
 
         SUCCESS_MSG="UPLOAD SUCCESSFUL 🚀%0A"
-        SUCCESS_MSG+="├─ 📱 <b>Device:</b> ${DEVICE}%0A"
+        SUCCESS_MSG+="├─ 📱 <b>Device:</b> ${DEVICE_NAME}%0A"
         SUCCESS_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
         SUCCESS_MSG+="├─ 🤖 <b>Android:</b> ${ANDROID_VERSION}%0A"
         SUCCESS_MSG+="├─ 💻 <b>Host:</b> ${BUILD_HOSTNAME}%0A"
