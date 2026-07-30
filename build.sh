@@ -477,6 +477,11 @@ process_artifacts() {
     FILES_TO_UPLOAD+=("$ROM_ZIP")
     echo "✅ Found ROM: $(basename "$ROM_ZIP")"
 
+    # Compute checksums and size for Telegram notification
+    ROM_SIZE_HUMAN=$(du -h "$ROM_ZIP" 2>/dev/null | awk '{print $1}' || echo "Unknown")
+    ROM_SHA256=$(sha256sum "$ROM_ZIP" 2>/dev/null | awk '{print $1}' || echo "Unknown")
+    ROM_MD5=$(md5sum "$ROM_ZIP" 2>/dev/null | awk '{print $1}' || echo "Unknown")
+
     # ==========================================
     # 📝 OTA JSON Metadata Generation / Handling
     # ==========================================
@@ -665,75 +670,137 @@ upload_and_notify() {
     FOLDER_ID=""
     UPLOADED_IDS=()
 
-    for FILE_PATH in "${FILES_TO_UPLOAD[@]}"; do
-        FILE_NAME=$(basename "$FILE_PATH")
-        echo "⬆️ Uploading $FILE_NAME..."
+    if [ "$USE_PIXELDRAIN" == "true" ]; then
+        echo "⚡ Uploading ${#FILES_TO_UPLOAD[@]} file(s) in parallel to Pixeldrain..."
+        TMP_DIR=$(mktemp -d)
 
-        if [ "$USE_PIXELDRAIN" == "true" ]; then
-            UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
-                -u ":$PIXELDRAIN_API_KEY" \
-                -F "file=@${FILE_PATH}" \
-                "https://pixeldrain.com/api/file" || true)
+        for i in "${!FILES_TO_UPLOAD[@]}"; do
+            (
+                FILE_PATH="${FILES_TO_UPLOAD[$i]}"
+                UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
+                    -u ":$PIXELDRAIN_API_KEY" \
+                    -F "file=@${FILE_PATH}" \
+                    "https://pixeldrain.com/api/file" || true)
+                echo "$UPLOAD_RES" > "$TMP_DIR/res_$i.json"
+            ) &
+        done
+        wait
 
+        for i in "${!FILES_TO_UPLOAD[@]}"; do
+            FILE_PATH="${FILES_TO_UPLOAD[$i]}"
+            FILE_NAME=$(basename "$FILE_PATH")
+            UPLOAD_RES=$(cat "$TMP_DIR/res_$i.json" 2>/dev/null || true)
             SUCCESS=$(echo "$UPLOAD_RES" | jq -r '.success' 2>/dev/null || true)
 
             if [ "$SUCCESS" == "true" ]; then
                 FILE_ID=$(echo "$UPLOAD_RES" | jq -r '.id' 2>/dev/null || true)
                 UPLOADED_IDS+=("$FILE_ID")
-                echo "✅ Uploaded! ID: $FILE_ID"
+                echo "✅ Uploaded $FILE_NAME! ID: $FILE_ID"
             else
                 echo "❌ Failed to upload $FILE_NAME to Pixeldrain"
                 echo "Response: $UPLOAD_RES"
+                rm -rf "$TMP_DIR"
                 handle_error $LINENO
             fi
+        done
+        rm -rf "$TMP_DIR"
+
+    else
+        # Upload initial file to Gofile synchronously to establish folder & token
+        FIRST_FILE="${FILES_TO_UPLOAD[0]}"
+        FIRST_NAME=$(basename "$FIRST_FILE")
+        echo "⬆️ Uploading $FIRST_NAME (initial file)..."
+
+        UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
+            -F "file=@${FIRST_FILE}" \
+            "https://${SERVER}.gofile.io/contents/uploadfile" || true)
+
+        STATUS=$(echo "$UPLOAD_RES" | jq -r '.status' 2>/dev/null || true)
+
+        if [ "$STATUS" == "ok" ]; then
+            echo "✅ Uploaded $FIRST_NAME!"
+            MASTER_LINK=$(echo "$UPLOAD_RES" | jq -r '.data.downloadPage' 2>/dev/null || true)
+            GUEST_TOKEN=$(echo "$UPLOAD_RES" | jq -r '.data.guestToken' 2>/dev/null || true)
+            FOLDER_ID=$(echo "$UPLOAD_RES" | jq -r '.data.parentFolder' 2>/dev/null || true)
+            echo "📁 Folder created! Grouping remaining files..."
         else
-            if [ -n "$GUEST_TOKEN" ] && [ -n "$FOLDER_ID" ]; then
-                UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
-                    -F "token=$GUEST_TOKEN" \
-                    -F "folderId=$FOLDER_ID" \
-                    -F "file=@${FILE_PATH}" \
-                    "https://${SERVER}.gofile.io/contents/uploadfile" || true)
-            else
-                UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
-                    -F "file=@${FILE_PATH}" \
-                    "https://${SERVER}.gofile.io/contents/uploadfile" || true)
-            fi
+            echo "⚠️ Gofile upload failed for $FIRST_NAME. Switching to Pixeldrain fallback..."
+            USE_PIXELDRAIN=true
+        fi
 
-            STATUS=$(echo "$UPLOAD_RES" | jq -r '.status' 2>/dev/null || true)
+        # Upload remaining files in parallel to Gofile
+        if [ "$USE_PIXELDRAIN" == "false" ] && [ ${#FILES_TO_UPLOAD[@]} -gt 1 ]; then
+            echo "⚡ Uploading remaining $((${#FILES_TO_UPLOAD[@]} - 1)) file(s) in parallel to Gofile..."
+            TMP_DIR=$(mktemp -d)
 
-            if [ "$STATUS" == "ok" ]; then
-                echo "✅ Uploaded!"
+            for i in $(seq 1 $((${#FILES_TO_UPLOAD[@]} - 1))); do
+                (
+                    FILE_PATH="${FILES_TO_UPLOAD[$i]}"
+                    UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
+                        -F "token=$GUEST_TOKEN" \
+                        -F "folderId=$FOLDER_ID" \
+                        -F "file=@${FILE_PATH}" \
+                        "https://${SERVER}.gofile.io/contents/uploadfile" || true)
+                    echo "$UPLOAD_RES" > "$TMP_DIR/res_$i.json"
+                ) &
+            done
+            wait
 
-                if [ -z "$GUEST_TOKEN" ]; then
-                    MASTER_LINK=$(echo "$UPLOAD_RES" | jq -r '.data.downloadPage' 2>/dev/null || true)
-                    GUEST_TOKEN=$(echo "$UPLOAD_RES" | jq -r '.data.guestToken' 2>/dev/null || true)
-                    FOLDER_ID=$(echo "$UPLOAD_RES" | jq -r '.data.parentFolder' 2>/dev/null || true)
-                    echo "📁 Folder created! Grouping remaining files here..."
+            for i in $(seq 1 $((${#FILES_TO_UPLOAD[@]} - 1))); do
+                FILE_PATH="${FILES_TO_UPLOAD[$i]}"
+                FILE_NAME=$(basename "$FILE_PATH")
+                UPLOAD_RES=$(cat "$TMP_DIR/res_$i.json" 2>/dev/null || true)
+                STATUS=$(echo "$UPLOAD_RES" | jq -r '.status' 2>/dev/null || true)
+
+                if [ "$STATUS" == "ok" ]; then
+                    echo "✅ Uploaded $FILE_NAME!"
+                else
+                    echo "⚠️ Gofile parallel upload failed for $FILE_NAME. Switching to Pixeldrain fallback..."
+                    USE_PIXELDRAIN=true
+                    break
                 fi
-            else
-                echo "⚠️ Gofile upload failed for $FILE_NAME. Switching to Pixeldrain fallback..."
-                USE_PIXELDRAIN=true
-                
-                UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
-                    -u ":$PIXELDRAIN_API_KEY" \
-                    -F "file=@${FILE_PATH}" \
-                    "https://pixeldrain.com/api/file" || true)
+            done
+            rm -rf "$TMP_DIR"
+        fi
 
+        # If Gofile failed at any step, fallback to parallel Pixeldrain upload
+        if [ "$USE_PIXELDRAIN" == "true" ]; then
+            echo "⚡ Re-uploading all ${#FILES_TO_UPLOAD[@]} file(s) in parallel to Pixeldrain..."
+            TMP_DIR=$(mktemp -d)
+            UPLOADED_IDS=()
+
+            for i in "${!FILES_TO_UPLOAD[@]}"; do
+                (
+                    FILE_PATH="${FILES_TO_UPLOAD[$i]}"
+                    UPLOAD_RES=$(curl -s --retry 3 --connect-timeout 20 --max-time 1800 \
+                        -u ":$PIXELDRAIN_API_KEY" \
+                        -F "file=@${FILE_PATH}" \
+                        "https://pixeldrain.com/api/file" || true)
+                    echo "$UPLOAD_RES" > "$TMP_DIR/res_$i.json"
+                ) &
+            done
+            wait
+
+            for i in "${!FILES_TO_UPLOAD[@]}"; do
+                FILE_PATH="${FILES_TO_UPLOAD[$i]}"
+                FILE_NAME=$(basename "$FILE_PATH")
+                UPLOAD_RES=$(cat "$TMP_DIR/res_$i.json" 2>/dev/null || true)
                 SUCCESS=$(echo "$UPLOAD_RES" | jq -r '.success' 2>/dev/null || true)
 
                 if [ "$SUCCESS" == "true" ]; then
                     FILE_ID=$(echo "$UPLOAD_RES" | jq -r '.id' 2>/dev/null || true)
                     UPLOADED_IDS+=("$FILE_ID")
-                    echo "✅ Uploaded to Pixeldrain! ID: $FILE_ID"
+                    echo "✅ Uploaded $FILE_NAME! ID: $FILE_ID"
                 else
                     echo "❌ Failed to upload $FILE_NAME to Pixeldrain as well."
                     echo "Response: $UPLOAD_RES"
+                    rm -rf "$TMP_DIR"
                     handle_error $LINENO
                 fi
-            fi
+            done
+            rm -rf "$TMP_DIR"
         fi
-        echo "------------------------------------------"
-    done
+    fi
 
     if [ "$USE_PIXELDRAIN" == "true" ] && [ ${#UPLOADED_IDS[@]} -gt 0 ]; then
         echo "📁 Creating Pixeldrain List (Folder)..."
@@ -778,14 +845,29 @@ upload_and_notify() {
         SUCCESS_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
         SUCCESS_MSG+="├─ 🤖 <b>Android:</b> ${ANDROID_VERSION}%0A"
         SUCCESS_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
+        if [ -n "$ROM_SIZE_HUMAN" ] && [ "$ROM_SIZE_HUMAN" != "Unknown" ]; then
+            SUCCESS_MSG+="├─ 📦 <b>Size:</b> ${ROM_SIZE_HUMAN}%0A"
+        fi
+        if [ -n "$ROM_MD5" ] && [ "$ROM_MD5" != "Unknown" ]; then
+            SUCCESS_MSG+="├─ 🔒 <b>MD5:</b> <code>${ROM_MD5}</code>%0A"
+        fi
+        if [ -n "$ROM_SHA256" ] && [ "$ROM_SHA256" != "Unknown" ]; then
+            SUCCESS_MSG+="├─ 🛡️ <b>SHA256:</b> <code>${ROM_SHA256}</code>%0A"
+        fi
 
         if [ -s source_changelog.txt ]; then
             CHANGELOG_URL=""
             
-            # Upload changelog to paste.rs for a raw text preview link (GitHub Raw style)
+            # Upload changelog to paste.rs for a raw text preview link
             RES=$(curl -s --max-time 10 --data-binary @source_changelog.txt https://paste.rs/ || true)
             if [[ "$RES" == http* ]]; then
                 CHANGELOG_URL=$(echo -n "$RES" | tr -d '\n\r')
+            else
+                # Fallback to dpaste.org
+                RES=$(curl -s --max-time 10 -F "content=@source_changelog.txt" -F "format=url" -F "expiry_days=7" https://dpaste.org/api/ || true)
+                if [[ "$RES" == http* ]]; then
+                    CHANGELOG_URL=$(echo -n "$RES" | tr -d '\n\r')
+                fi
             fi
 
             if [ -n "$CHANGELOG_URL" ]; then
