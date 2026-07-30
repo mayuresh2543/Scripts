@@ -793,7 +793,12 @@ upload_and_notify() {
             fi
         fi
 
-        SUCCESS_MSG+="└─ 🔗 <a href=\"${MASTER_LINK}\">Download on Gofile</a>"
+        PROVIDER_NAME="Gofile"
+        if [ "$USE_PIXELDRAIN" == "true" ] || [[ "$MASTER_LINK" == *"pixeldrain"* ]]; then
+            PROVIDER_NAME="Pixeldrain"
+        fi
+
+        SUCCESS_MSG+="└─ 🔗 <a href=\"${MASTER_LINK}\">Download on ${PROVIDER_NAME}</a>"
 
         send_tg_msg "$SUCCESS_MSG"
         echo "✅ Notification sent!"
