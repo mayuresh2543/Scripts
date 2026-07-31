@@ -852,9 +852,6 @@ upload_and_notify() {
         if [ -n "$ROM_MD5" ] && [ "$ROM_MD5" != "Unknown" ]; then
             SUCCESS_MSG+="• <b>MD5:</b> <code>${ROM_MD5}</code>%0A"
         fi
-        if [ -n "$ROM_SHA256" ] && [ "$ROM_SHA256" != "Unknown" ]; then
-            SUCCESS_MSG+="• <b>SHA256:</b> <code>${ROM_SHA256}</code>%0A"
-        fi
 
         PROVIDER_NAME="Gofile"
         if [ "$USE_PIXELDRAIN" == "true" ] || [[ "$MASTER_LINK" == *"pixeldrain"* ]]; then
