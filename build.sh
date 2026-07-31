@@ -120,17 +120,17 @@ handle_error() {
     local DISPLAY_ROM="${ROM_NAME:-Unknown}"
     local DISPLAY_ANDROID="${ANDROID_VERSION:-Unknown}"
     
-    local FAIL_MSG="BUILD FAILED ❌%0A"
-    FAIL_MSG+="├─ 📱 <b>Device:</b> ${DEVICE_NAME}%0A"
-    FAIL_MSG+="├─ 💿 <b>ROM:</b> ${DISPLAY_ROM}%0A"
-    FAIL_MSG+="├─ 🤖 <b>Android:</b> ${DISPLAY_ANDROID}%0A"
-    FAIL_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
-    FAIL_MSG+="├─ ⚠️ <b>Error:</b> Line ${FAILED_LINE}"
+    local FAIL_MSG="❌ <b>BUILD FAILED</b>%0A%0A"
+    FAIL_MSG+="<blockquote>• <b>Device:</b> ${DEVICE_NAME}%0A"
+    FAIL_MSG+="• <b>ROM:</b> ${DISPLAY_ROM}%0A"
+    FAIL_MSG+="• <b>Android:</b> ${DISPLAY_ANDROID}%0A"
+    FAIL_MSG+="• <b>Time:</b> ${DISPLAY_TIME}%0A"
+    FAIL_MSG+="• <b>Error:</b> Line ${FAILED_LINE}"
     
     if [ -n "$LOG_LINK" ]; then
-        FAIL_MSG="${FAIL_MSG}%0A└─ 📄 <a href=\"${LOG_LINK}\">View Crash Log</a>"
+        FAIL_MSG="${FAIL_MSG}%0A• <b>Crash Log:</b> <a href=\"${LOG_LINK}\">View Crash Log</a></blockquote>"
     else
-        FAIL_MSG="${FAIL_MSG}%0A└─ 💻 Check Crave Logs"
+        FAIL_MSG="${FAIL_MSG}%0A• <b>Crash Log:</b> Check Crave Logs</blockquote>"
     fi
 
     send_tg_msg "$FAIL_MSG"
@@ -283,11 +283,11 @@ echo "✅ Android Version: ${ANDROID_VERSION:-Unknown}"
 
 send_start_notification() {
     echo "📱 Sending 'Build Started' notification..."
-    START_MSG="BUILD STARTED ⏳%0A"
-    START_MSG+="├─ 📱 <b>Device:</b> ${DEVICE_NAME}%0A"
-    START_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
-    START_MSG+="├─ 🤖 <b>Android:</b> ${ANDROID_VERSION}%0A"
-    START_MSG+="└─ 💻 <b>Host:</b> ${BUILD_HOSTNAME}"
+    START_MSG="⏳ <b>BUILD STARTED</b>%0A%0A"
+    START_MSG+="<blockquote>• <b>Device:</b> ${DEVICE_NAME}%0A"
+    START_MSG+="• <b>ROM:</b> ${ROM_NAME}%0A"
+    START_MSG+="• <b>Android:</b> ${ANDROID_VERSION}%0A"
+    START_MSG+="• <b>Host:</b> ${BUILD_HOSTNAME}</blockquote>"
     send_tg_msg "$START_MSG"
 }
 
@@ -840,19 +840,24 @@ upload_and_notify() {
     if [ -n "$MASTER_LINK" ]; then
         echo "📱 Sending 'Build Success' notification..."
 
-        SUCCESS_MSG="BUILD SUCCESSFUL 🚀%0A"
-        SUCCESS_MSG+="├─ 📱 <b>Device:</b> ${DEVICE_NAME}%0A"
-        SUCCESS_MSG+="├─ 💿 <b>ROM:</b> ${ROM_NAME}%0A"
-        SUCCESS_MSG+="├─ 🤖 <b>Android:</b> ${ANDROID_VERSION}%0A"
-        SUCCESS_MSG+="├─ ⏱️ <b>Time:</b> ${DISPLAY_TIME}%0A"
+        SUCCESS_MSG="🚀 <b>BUILD SUCCESSFUL</b>%0A%0A"
+        SUCCESS_MSG+="<blockquote>• <b>Device:</b> ${DEVICE_NAME}%0A"
+        SUCCESS_MSG+="• <b>ROM:</b> ${ROM_NAME}%0A"
+        SUCCESS_MSG+="• <b>Android:</b> ${ANDROID_VERSION}%0A"
+        SUCCESS_MSG+="• <b>Time:</b> ${DISPLAY_TIME}%0A"
         if [ -n "$ROM_SIZE_HUMAN" ] && [ "$ROM_SIZE_HUMAN" != "Unknown" ]; then
-            SUCCESS_MSG+="├─ 📦 <b>Size:</b> ${ROM_SIZE_HUMAN}%0A"
+            SUCCESS_MSG+="• <b>Size:</b> ${ROM_SIZE_HUMAN}%0A"
         fi
         if [ -n "$ROM_MD5" ] && [ "$ROM_MD5" != "Unknown" ]; then
-            SUCCESS_MSG+="├─ 🔒 <b>MD5:</b> <code>${ROM_MD5}</code>%0A"
+            SUCCESS_MSG+="• <b>MD5:</b> <code>${ROM_MD5}</code>%0A"
         fi
         if [ -n "$ROM_SHA256" ] && [ "$ROM_SHA256" != "Unknown" ]; then
-            SUCCESS_MSG+="├─ 🛡️ <b>SHA256:</b> <code>${ROM_SHA256}</code>%0A"
+            SUCCESS_MSG+="• <b>SHA256:</b> <code>${ROM_SHA256}</code>%0A"
+        fi
+
+        PROVIDER_NAME="Gofile"
+        if [ "$USE_PIXELDRAIN" == "true" ] || [[ "$MASTER_LINK" == *"pixeldrain"* ]]; then
+            PROVIDER_NAME="Pixeldrain"
         fi
 
         if [ -s source_changelog.txt ]; then
@@ -871,16 +876,11 @@ upload_and_notify() {
             fi
 
             if [ -n "$CHANGELOG_URL" ]; then
-                SUCCESS_MSG+="├─ 📜 <b>Changelog:</b> <a href=\"${CHANGELOG_URL}\">View Latest Changes</a>%0A"
+                SUCCESS_MSG+="• <b>Changelog:</b> <a href=\"${CHANGELOG_URL}\">View Latest Changes</a>%0A"
             fi
         fi
 
-        PROVIDER_NAME="Gofile"
-        if [ "$USE_PIXELDRAIN" == "true" ] || [[ "$MASTER_LINK" == *"pixeldrain"* ]]; then
-            PROVIDER_NAME="Pixeldrain"
-        fi
-
-        SUCCESS_MSG+="└─ 🔗 <a href=\"${MASTER_LINK}\">Download on ${PROVIDER_NAME}</a>"
+        SUCCESS_MSG+="• <b>Download:</b> <a href=\"${MASTER_LINK}\">Download on ${PROVIDER_NAME}</a></blockquote>"
 
         send_tg_msg "$SUCCESS_MSG"
         echo "✅ Notification sent!"
