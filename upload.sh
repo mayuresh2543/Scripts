@@ -17,6 +17,7 @@ send_tg_msg() {
     curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
         -d "chat_id=${TELEGRAM_CHAT_ID}" \
         -d "parse_mode=HTML" \
+        -d "disable_web_page_preview=true" \
         -d "text=${MESSAGE}" > /dev/null
 }
 
