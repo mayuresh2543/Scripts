@@ -183,6 +183,7 @@ case "$DEVICE" in
                     "bionic|lineage_qpr2_bionic"
                     "art|lineage_qpr2_from-aosp_art"
                     "frameworks/libs/systemui|lineage_qpr2_frameworks_libs_systemui"
+                    "hardware/lineage/interfaces|lineage_qpr2_hardware_lineage_interfaces"
                 )
                 ;;
 
