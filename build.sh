@@ -185,6 +185,7 @@ case "$DEVICE" in
                     "frameworks/libs/systemui|lineage_qpr2_frameworks_libs_systemui"
                     "hardware/lineage/interfaces|lineage_qpr2_hardware_lineage_interfaces"
                     "vendor/lineage|lineage_qpr2_vendor_lineage"
+                    "system/sepolicy|lineage_qpr2_system_sepolicy"
                 )
                 ;;
 
