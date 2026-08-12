@@ -360,9 +360,9 @@ sync_repositories() {
         echo "Syncing custom repositories in parallel for $ROM_NAME..."
         
         if [ "$DEVICE" == "spes" ]; then
-            BASE_URL="https://github.com/mayuresh-spes-sources"
+            BASE_URL="https://github.com/lineage-20-spes"
         else
-            BASE_URL="https://github.com/mayuresh-sources"
+            BASE_URL="https://github.com/lineage-23-2-stone"
         fi
 
         for repo_info in "${CUSTOM_REPOS[@]}"; do
