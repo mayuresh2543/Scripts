@@ -174,6 +174,7 @@ case "$DEVICE" in
                 BUILD_TARGET="lineage_stone-bp4a-userdebug"
                 BUILD_COMMAND="m bacon"
 
+                BASE_URL="https://github.com/lineage-23-2-stone"
                 CUSTOM_REPOS=(
                     "packages/apps/Updater|lineage_qpr2_packages_apps_Updater"
                     "packages/apps/Settings|lineage_qpr2_packages_apps_Settings"
@@ -191,6 +192,39 @@ case "$DEVICE" in
                 ;;
 
             2)
+                ROM_NAME="LineageOS 22.2"
+                ANDROID_VERSION="15"
+                ROM_VERSION="22.2"
+                GH_REPO="mayuresh-releases/LineageOS_stone"
+
+                REPO_INIT_URL="https://github.com/LineageOS/android.git"
+                REPO_INIT_BRANCH="lineage-22.2"
+                USE_LOCAL_MANIFEST="true"
+                LOCAL_MANIFEST_BRANCH="lineage-15"
+                BUILD_TARGET="lineage_stone-bp1a-userdebug"
+                BUILD_COMMAND="m bacon"
+
+                MANUAL_GIT_CLONES=(
+                    "https://github.com/LineageOS/android_external_google-fonts_google-sans-flex.git -b lineage-23.2 external/google-fonts/google-sans-flex"
+                )
+
+                BASE_URL="https://github.com/lineage-22-2-stone"
+                CUSTOM_REPOS=(
+                    "packages/apps/Updater|lineage_a15_packages_apps_Updater"
+                    "packages/apps/Settings|lineage_a15_packages_apps_Settings"
+                    "packages/apps/Trebuchet|lineage_a15_packages_apps_Trebuchet"
+                    "frameworks/native|lineage_a15_frameworks_native"
+                    "frameworks/base|lineage_a15_frameworks_base"
+                    "bionic|lineage_a15_bionic"
+                    "art|lineage_a15_art"
+                    "build/soong|lineage_a15_build_soong"
+                    "frameworks/libs/systemui|lineage_a15_frameworks_libs_systemui"
+                    "vendor/lineage|lineage_a15_vendor_lineage"
+                    "packages/overlays/Lineage|lineage_a15_packages_overlays_Lineage"
+                )
+                ;;
+
+            3)
                 ROM_NAME="YAAP 16.2"
                 ANDROID_VERSION="16-QPR2"
                 GH_REPO="mayuresh-releases/YAAP_stone"
@@ -202,13 +236,14 @@ case "$DEVICE" in
                 BUILD_TARGET="yaap_stone-userdebug"
                 BUILD_COMMAND="m yaap"
 
+                BASE_URL="https://github.com/lineage-23-2-stone"
                 CUSTOM_REPOS=(
                     "build/soong|yaap_build_soong"
                     "build/make|yaap_build_make"
                 )
                 ;;
 
-            3)
+            4)
                 ROM_NAME="Infinity-X"
                 ANDROID_VERSION="16-QPR2"
                 GH_REPO="mayuresh-releases/Infinity-X_stone"
@@ -259,6 +294,7 @@ case "$DEVICE" in
                     "hardware/lineage/compat/Android.bp"
                 )
 
+                BASE_URL="https://github.com/lineage-20-spes"
                 CUSTOM_REPOS=(
                     "packages/apps/Updater|lineage_packages_apps_Updater"
                     "build/make|lineage_android_build"
@@ -359,12 +395,6 @@ sync_repositories() {
     if [ ${#CUSTOM_REPOS[@]} -gt 0 ]; then
         echo "=========================================="
         echo "Syncing custom repositories in parallel for $ROM_NAME..."
-        
-        if [ "$DEVICE" == "spes" ]; then
-            BASE_URL="https://github.com/lineage-20-spes"
-        else
-            BASE_URL="https://github.com/lineage-23-2-stone"
-        fi
 
         for repo_info in "${CUSTOM_REPOS[@]}"; do
             DIR="${repo_info%%|*}"
@@ -559,8 +589,8 @@ process_artifacts() {
 
     case $ROM_CHOICE in
         1)
-            # 🟢 LineageOS Standard Structure
-            echo "Generating standard ${DEVICE}.json for LineageOS..."
+            # 🟢 LineageOS 23.2 Standard Structure
+            echo "Generating standard ${DEVICE}.json for LineageOS 23.2..."
             FILE_SIZE=$(stat -c %s "$ROM_ZIP")
             FILE_HASH=$(sha256sum "$ROM_ZIP" | awk '{print $1}')
             GH_DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${REL_TAG}/${FILE_NAME}"
@@ -595,6 +625,40 @@ process_artifacts() {
             ;;
 
         2)
+            # 🟢 LineageOS 22.2 Classic Response Structure
+            echo "Generating classic response ${DEVICE}.json for LineageOS 22.2..."
+            FILE_SIZE=$(stat -c %s "$ROM_ZIP")
+            FILE_HASH=$(sha256sum "$ROM_ZIP" | awk '{print $1}')
+            GH_DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${REL_TAG}/${FILE_NAME}"
+            JSON_FILE="${TARGET_DIR}/${DEVICE}.json"
+
+            jq -n \
+              --arg dt "$BUILD_DATETIME" \
+              --arg fn "$FILE_NAME" \
+              --arg id "$FILE_HASH" \
+              --arg rt "nightly" \
+              --arg sz "$FILE_SIZE" \
+              --arg url "$GH_DOWNLOAD_URL" \
+              --arg ver "$ROM_VERSION" \
+              '{
+                response: [
+                  {
+                    datetime: ($dt | tonumber),
+                    filename: $fn,
+                    id: $id,
+                    romtype: $rt,
+                    size: ($sz | tonumber),
+                    url: $url,
+                    version: $ver
+                  }
+                ]
+              }' > "$JSON_FILE"
+
+            echo "✅ Created $JSON_FILE"
+            FILES_TO_UPLOAD+=("$JSON_FILE")
+            ;;
+
+        3)
             # 🔵 YAAP Offset Payload Structure
             echo "Generating payload-nested ${DEVICE}.json for YAAP..."
             JSON_FILE="${TARGET_DIR}/${DEVICE}.json"
@@ -645,7 +709,7 @@ process_artifacts() {
             rm -rf "$EXTRACT_DIR"
             ;;
 
-        3)
+        4)
             # 🟡 Infinity-X Autogenerated Structure
             echo "Locating autogenerated JSON for Infinity-X..."
             # Infinity-X natively appends .json directly to the full zip filename (e.g., rom.zip.json)
