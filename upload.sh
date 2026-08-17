@@ -41,25 +41,25 @@ case "$DEVICE" in
                 ;;
 
             2)
+                ROM_NAME="LineageOS 22.2"
+                ANDROID_VERSION="15"
+                ROM_VERSION="22.2"
+                GH_REPO="mayuresh-releases/LineageOS_stone"
+                REPO_INIT_BRANCH="lineage-22.2"
+                ;;
+
+            3)
                 ROM_NAME="YAAP 16.2"
                 ANDROID_VERSION="16-QPR2"
                 GH_REPO="mayuresh-releases/YAAP_stone"
                 REPO_INIT_BRANCH="sixteen"
                 ;;
 
-            3)
+            4)
                 ROM_NAME="Infinity-X"
                 ANDROID_VERSION="16-QPR2"
                 GH_REPO="mayuresh-releases/Infinity-X_stone"
                 REPO_INIT_BRANCH="16"
-                ;;
-
-            4)
-                ROM_NAME="LineageOS 24.0"
-                ANDROID_VERSION="17"
-                ROM_VERSION="24.0"
-                GH_REPO="mayuresh-releases/LineageOS_stone"
-                REPO_INIT_BRANCH="lineage-24.0"
                 ;;
 
             *)
