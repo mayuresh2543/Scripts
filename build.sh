@@ -219,6 +219,7 @@ case "$DEVICE" in
                     "art|lineage_a15_art"
                     "build/soong|lineage_a15_build_soong"
                     "frameworks/libs/systemui|lineage_a15_frameworks_libs_systemui"
+                    "hardware/lineage/interfaces|lineage_a15_hardware_lineage_interfaces"
                     "vendor/lineage|lineage_a15_vendor_lineage"
                     "packages/overlays/Lineage|lineage_a15_packages_overlays_Lineage"
                 )
