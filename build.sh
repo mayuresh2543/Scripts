@@ -266,6 +266,24 @@ case "$DEVICE" in
                 )
                 ;;
 
+            5)
+                ROM_NAME="YAAP 17"
+                ANDROID_VERSION="17"
+                GH_REPO="mayuresh-releases/YAAP_stone"
+
+                REPO_INIT_URL="https://github.com/yaap/manifest.git"
+                REPO_INIT_BRANCH="seventeen"
+                USE_LOCAL_MANIFEST="true"
+                LOCAL_MANIFEST_BRANCH="yaap-17"
+                BUILD_TARGET="yaap_stone-userdebug"
+                BUILD_COMMAND="m yaap"
+
+                BASE_URL="https://github.com/yaap-17-stone"
+                CUSTOM_REPOS=(
+                    "build/soong|build_soong"
+                )
+                ;;
+
 
             *)
                 echo "❌ Invalid ROM choice for stone!"
@@ -659,7 +677,7 @@ process_artifacts() {
             FILES_TO_UPLOAD+=("$JSON_FILE")
             ;;
 
-        3)
+        3|5)
             # 🔵 YAAP Offset Payload Structure
             echo "Generating payload-nested ${DEVICE}.json for YAAP..."
             JSON_FILE="${TARGET_DIR}/${DEVICE}.json"

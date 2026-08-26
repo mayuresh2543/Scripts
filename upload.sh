@@ -62,6 +62,13 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="16"
                 ;;
 
+            5)
+                ROM_NAME="YAAP 17"
+                ANDROID_VERSION="17"
+                GH_REPO="mayuresh-releases/YAAP_stone"
+                REPO_INIT_BRANCH="seventeen"
+                ;;
+
             *)
                 echo "❌ Invalid ROM choice for stone!"
                 handle_error $LINENO
