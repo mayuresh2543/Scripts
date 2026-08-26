@@ -226,21 +226,20 @@ case "$DEVICE" in
                 ;;
 
             3)
-                ROM_NAME="YAAP 16.2"
-                ANDROID_VERSION="16-QPR2"
+                ROM_NAME="YAAP 17"
+                ANDROID_VERSION="17"
                 GH_REPO="mayuresh-releases/YAAP_stone"
 
                 REPO_INIT_URL="https://github.com/yaap/manifest.git"
-                REPO_INIT_BRANCH="sixteen"
+                REPO_INIT_BRANCH="seventeen"
                 USE_LOCAL_MANIFEST="true"
-                LOCAL_MANIFEST_BRANCH="yaap-16"
-                BUILD_TARGET="yaap_stone-userdebug"
+                LOCAL_MANIFEST_BRANCH="yaap-17"
+                BUILD_TARGET="yaap_stone-user"
                 BUILD_COMMAND="m yaap"
 
-                BASE_URL="https://github.com/lineage-23-2-stone"
+                BASE_URL="https://github.com/yaap-17-stone"
                 CUSTOM_REPOS=(
-                    "build/soong|yaap_build_soong"
-                    "build/make|yaap_build_make"
+                    "build/soong|build_soong"
                 )
                 ;;
 
@@ -263,24 +262,6 @@ case "$DEVICE" in
                     "https://github.com/mayuresh-sources/hardware_dolby.git -b sony-1.0 hardware/dolby"
                     "https://github.com/LineageOS/android_hardware_xiaomi.git -b lineage-23.2 hardware/xiaomi"
                     "https://github.com/mayuresh-sources/packages_apps_ViPER4AndroidFX.git packages/apps/ViPER4AndroidFX"
-                )
-                ;;
-
-            5)
-                ROM_NAME="YAAP 17"
-                ANDROID_VERSION="17"
-                GH_REPO="mayuresh-releases/YAAP_stone"
-
-                REPO_INIT_URL="https://github.com/yaap/manifest.git"
-                REPO_INIT_BRANCH="seventeen"
-                USE_LOCAL_MANIFEST="true"
-                LOCAL_MANIFEST_BRANCH="yaap-17"
-                BUILD_TARGET="yaap_stone-userdebug"
-                BUILD_COMMAND="m yaap"
-
-                BASE_URL="https://github.com/yaap-17-stone"
-                CUSTOM_REPOS=(
-                    "build/soong|build_soong"
                 )
                 ;;
 
@@ -678,7 +659,7 @@ process_artifacts() {
             FILES_TO_UPLOAD+=("$JSON_FILE")
             ;;
 
-        3|5)
+        3)
             # 🔵 YAAP Offset Payload Structure
             echo "Generating payload-nested ${DEVICE}.json for YAAP..."
             JSON_FILE="${TARGET_DIR}/${DEVICE}.json"
