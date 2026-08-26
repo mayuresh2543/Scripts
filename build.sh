@@ -486,6 +486,7 @@ sync_repositories() {
 compile_rom() {
     # 3. Environment Variables
     export TZ="Asia/Kolkata"
+    [ "$ANDROID_VERSION" == "17" ] && export GOMAXPROCS=16 GOMEMLIMIT=42GiB GOGC=25 MALLOC_ARENA_MAX=4
 
     # 📦 Install legacy Ncurses via apt as requested (spes only)
     if [ "$DEVICE" == "spes" ]; then
