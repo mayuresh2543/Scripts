@@ -49,10 +49,10 @@ case "$DEVICE" in
                 ;;
 
             3)
-                ROM_NAME="YAAP 16.2"
-                ANDROID_VERSION="16-QPR2"
+                ROM_NAME="YAAP 17"
+                ANDROID_VERSION="17"
                 GH_REPO="mayuresh-releases/YAAP_stone"
-                REPO_INIT_BRANCH="sixteen"
+                REPO_INIT_BRANCH="seventeen"
                 ;;
 
             4)
@@ -60,13 +60,6 @@ case "$DEVICE" in
                 ANDROID_VERSION="16-QPR2"
                 GH_REPO="mayuresh-releases/Infinity-X_stone"
                 REPO_INIT_BRANCH="16"
-                ;;
-
-            5)
-                ROM_NAME="YAAP 17"
-                ANDROID_VERSION="17"
-                GH_REPO="mayuresh-releases/YAAP_stone"
-                REPO_INIT_BRANCH="seventeen"
                 ;;
 
             *)
