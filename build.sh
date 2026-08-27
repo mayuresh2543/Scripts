@@ -349,6 +349,9 @@ sync_repositories() {
         echo "⏭️ Skipping local manifests (Not supported by $ROM_NAME)."
     fi
 
+    # Remove stale GCC prebuilts to prevent "Cannot remove project" repo sync errors
+    rm -rf prebuilts/gcc 2>/dev/null || true
+
     if [ -f /opt/crave/resync.sh ]; then
         echo "🚀 Running Crave resync..."
         /opt/crave/resync.sh
