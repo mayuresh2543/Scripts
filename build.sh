@@ -460,6 +460,12 @@ sync_repositories() {
         fi
     fi
 
+    # 3. Post-Sync Fixes for YAAP
+    if [[ "$ROM_NAME" == *"YAAP"* ]]; then
+        echo "🔧 Fixing genfscon /class/typec conflict for YAAP..."
+        find device/qcom/sepolicy_vndr -name "genfs_contexts" -exec sed -i '/genfscon sysfs \/class\/typec/d' {} + 2>/dev/null || true
+    fi
+
     # 3. Post-Sync Fixes for Android 13 (spes only)
     if [ "$DEVICE" == "spes" ]; then
         echo "🔧 Fixing unrecognized Soong properties for Android 13..."
