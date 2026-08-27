@@ -234,7 +234,7 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="seventeen"
                 USE_LOCAL_MANIFEST="true"
                 LOCAL_MANIFEST_BRANCH="yaap-17"
-                BUILD_TARGET="yaap_stone-user"
+                BUILD_TARGET="yaap_stone-userdebug"
                 BUILD_COMMAND="m yaap"
 
                 BASE_URL="https://github.com/yaap-17-stone"
