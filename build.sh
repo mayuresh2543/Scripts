@@ -673,50 +673,67 @@ process_artifacts() {
             echo "Generating payload-nested ${DEVICE}.json for YAAP..."
             JSON_FILE="${TARGET_DIR}/${DEVICE}.json"
 
-            # Extract payload properties from inside the zip safely without unpacking the whole ROM
-            EXTRACT_DIR=$(mktemp -d)
-            unzip -p "$ROM_ZIP" payload_properties.txt > "$EXTRACT_DIR/prop.txt" || true
+            python3 - <<EOF > "$JSON_FILE"
+import zipfile, json
 
-            if [ -s "$EXTRACT_DIR/prop.txt" ]; then
-                # Parse properties out of the text file
-                OFFSET=$(grep "FILE_OFFSET=" "$EXTRACT_DIR/prop.txt" | cut -d= -f2)
-                F_HASH=$(grep "FILE_HASH=" "$EXTRACT_DIR/prop.txt" | cut -d= -f2)
-                F_SIZE=$(grep "FILE_SIZE=" "$EXTRACT_DIR/prop.txt" | cut -d= -f2)
-                M_HASH=$(grep "METADATA_HASH=" "$EXTRACT_DIR/prop.txt" | cut -d= -f2)
-                M_SIZE=$(grep "METADATA_SIZE=" "$EXTRACT_DIR/prop.txt" | cut -d= -f2)
+zip_path = "$ROM_ZIP"
+filename = "$FILE_NAME"
+datetime_val = int("$BUILD_DATETIME")
 
-                jq -n \
-                  --arg dt "$BUILD_DATETIME" \
-                  --arg fn "$FILE_NAME" \
-                  --arg off "$OFFSET" \
-                  --arg fh "$F_HASH" \
-                  --arg fs "$F_SIZE" \
-                  --arg mh "$M_HASH" \
-                  --arg ms "$M_SIZE" \
-                  '{
-                    response: [
-                      {
-                        datetime: ($dt | tonumber),
-                        filename: $fn,
-                        payload: [
-                          {
-                            offset: ($off | tonumber),
-                            FILE_HASH: $fh,
-                            FILE_SIZE: $fs,
-                            METADATA_HASH: $mh,
-                            METADATA_SIZE: $ms
-                          }
-                        ]
-                      }
-                    ]
-                  }' > "$JSON_FILE"
+offset = 0
+file_hash = ""
+file_size = "0"
+metadata_hash = ""
+metadata_size = "0"
 
-                echo "✅ Created YAAP structure $(basename "$JSON_FILE")"
-                FILES_TO_UPLOAD+=("$JSON_FILE")
-            else
-                echo "⚠️ Warning: payload_properties.txt not found inside zip. Skipping YAAP JSON generation."
-            fi
-            rm -rf "$EXTRACT_DIR"
+with zipfile.ZipFile(zip_path, 'r') as z:
+    try:
+        info = z.getinfo('payload.bin')
+        offset = info.header_offset + 30 + len(info.filename) + len(info.extra)
+    except KeyError:
+        offset = 0
+
+    try:
+        with z.open('payload_properties.txt') as f:
+            for line in f.read().decode('utf-8').splitlines():
+                if '=' in line:
+                    k, v = line.split('=', 1)
+                    k = k.strip()
+                    v = v.strip()
+                    if k == 'FILE_HASH':
+                        file_hash = v
+                    elif k == 'FILE_SIZE':
+                        file_size = v
+                    elif k == 'METADATA_HASH':
+                        metadata_hash = v
+                    elif k == 'METADATA_SIZE':
+                        metadata_size = v
+    except KeyError:
+        pass
+
+data = {
+    "response": [
+        {
+            "datetime": datetime_val,
+            "filename": filename,
+            "payload": [
+                {
+                    "offset": offset,
+                    "FILE_HASH": file_hash,
+                    "FILE_SIZE": file_size,
+                    "METADATA_HASH": metadata_hash,
+                    "METADATA_SIZE": metadata_size
+                }
+            ]
+        }
+    ]
+}
+
+print(json.dumps(data, indent=2))
+EOF
+
+            echo "✅ Created YAAP structure $(basename "$JSON_FILE")"
+            FILES_TO_UPLOAD+=("$JSON_FILE")
             ;;
 
         4)
