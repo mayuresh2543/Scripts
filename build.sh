@@ -265,6 +265,20 @@ case "$DEVICE" in
                 )
                 ;;
 
+            5)
+                ROM_NAME="LineageOS 24.0"
+                ANDROID_VERSION="17"
+                ROM_VERSION="24.0"
+                GH_REPO="mayuresh-releases/LineageOS_stone"
+
+                REPO_INIT_URL="https://github.com/lineage-24-stone/android.git"
+                REPO_INIT_BRANCH="lineage-24.0"
+                USE_LOCAL_MANIFEST="true"
+                LOCAL_MANIFEST_BRANCH="lineage-17"
+                BUILD_TARGET="lineage_stone-cp2a-userdebug"
+                BUILD_COMMAND="m bacon"
+                ;;
+
 
             *)
                 echo "❌ Invalid ROM choice for stone!"
@@ -598,9 +612,9 @@ process_artifacts() {
     rm -rf "$EXTRACT_DIR"
 
     case $ROM_CHOICE in
-        1)
-            # 🟢 LineageOS 23.2 Standard Structure
-            echo "Generating standard ${DEVICE}.json for LineageOS 23.2..."
+        1|5)
+            # 🟢 LineageOS Standard Structure (23.2 & 24.0)
+            echo "Generating standard ${DEVICE}.json for LineageOS..."
             FILE_SIZE=$(stat -c %s "$ROM_ZIP")
             FILE_HASH=$(sha256sum "$ROM_ZIP" | awk '{print $1}')
             GH_DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${REL_TAG}/${FILE_NAME}"
