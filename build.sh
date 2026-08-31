@@ -277,6 +277,11 @@ case "$DEVICE" in
                 LOCAL_MANIFEST_BRANCH="lineage-17"
                 BUILD_TARGET="lineage_stone-cp2a-userdebug"
                 BUILD_COMMAND="m bacon"
+
+                BASE_URL="https://github.com/lineage-24-stone"
+                CUSTOM_REPOS=(
+                    "build/soong|lineage_a17_build_soong"
+                )
                 ;;
 
 
