@@ -338,7 +338,7 @@ EOF
         echo "Generated on $(date)" >> source_changelog.txt
         echo "" >> source_changelog.txt
         
-        if curl -s -G "https://review.lineageos.org/changes/" --data-urlencode "q=status:merged branch:${branch} -project:^.*_device_.* -project:^.*_kernel_.*" -d "n=200" | sed '1d' | jq -r 'group_by(.project) | sort_by(.[0].submitted // .[0].updated // "") | reverse | .[] | "### " + .[0].project + "\n" + (map("- [" + ((.submitted // .updated // "Unknown") | .[0:10]) + "] " + .subject) | join("\n")) + "\n"' >> source_changelog.txt; then
+        if curl -s -G "https://review.lineageos.org/changes/" --data-urlencode "q=status:merged branch:${branch} -project:^.*_device_.* -project:^.*mainline.* (-project:^.*_kernel_.* OR project:^.*android_kernel_qcom_sm8350.*)" -d "n=200" | sed '1d' | jq -r 'group_by(.project) | sort_by(.[0].submitted // .[0].updated // "") | reverse | .[] | "### " + .[0].project + "\n" + (map("- [" + ((.submitted // .updated // "Unknown") | .[0:10]) + "] " + .subject) | join("\n")) + "\n"' >> source_changelog.txt; then
             if [ -s source_changelog.txt ]; then
                 echo "✅ Changelog saved to source_changelog.txt"
                 FILES_TO_UPLOAD+=("source_changelog.txt")
