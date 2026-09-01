@@ -431,51 +431,44 @@ sync_repositories() {
         echo "⏭️ No custom repos defined for $ROM_NAME. Skipping parallel sync."
     fi
 
-    # 2.5 Ensure Clang r596125 is present for kernel build (stone)
+    # 2.5 Ensure Clang r614150 is present for kernel build (stone)
     if [ "$DEVICE" == "stone" ]; then
-        CLANG_TARGET_DIR="prebuilts/clang/host/linux-x86/clang-r596125"
+        CLANG_TARGET_DIR="prebuilts/clang/host/linux-x86/clang-r614150"
         if [ ! -d "$CLANG_TARGET_DIR" ] || [ ! -x "$CLANG_TARGET_DIR/bin/clang" ]; then
             echo "=========================================="
-            echo "📥 Fetching Clang r596125 for kernel build..."
+            echo "📥 Fetching Clang r614150 for kernel build..."
             rm -rf "$CLANG_TARGET_DIR"
             mkdir -p "$CLANG_TARGET_DIR"
 
-            set +eE # Temporarily relax strict mode for API querying
-            CLANG_URL=$(curl -sL https://api.github.com/repos/bachnxuan/aosp_clang_mirror/releases/latest | grep "browser_download_url" | grep "\.tar" | cut -d '"' -f 4 | head -n 1 || true)
-            set -eE # Re-enable strict mode
+            CLANG_URL="https://github.com/bachnxuan/aosp_clang_mirror/releases/download/clang-r614150-16165221/clang-r614150.tar.gz"
+            echo "⬇️ Downloading from $CLANG_URL..."
+            wget -q "$CLANG_URL" -O /tmp/clang-download.tar.gz
+            tar -xf /tmp/clang-download.tar.gz -C "$CLANG_TARGET_DIR"
+            rm -f /tmp/clang-download.tar.gz
 
-            if [ -n "$CLANG_URL" ]; then
-                echo "⬇️ Downloading from $CLANG_URL..."
-                wget -q "$CLANG_URL" -O /tmp/clang-download.tar.gz
-                tar -xf /tmp/clang-download.tar.gz -C "$CLANG_TARGET_DIR"
-                rm -f /tmp/clang-download.tar.gz
-
-                # Flatten nested folder if tarball unpacked into a subfolder
-                if [ ! -f "$CLANG_TARGET_DIR/bin/clang" ]; then
-                    NESTED_DIR=$(find "$CLANG_TARGET_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-                    if [ -n "$NESTED_DIR" ] && [ -f "$NESTED_DIR/bin/clang" ]; then
-                        shopt -s dotglob 2>/dev/null || true
-                        mv "$NESTED_DIR"/* "$CLANG_TARGET_DIR"/ 2>/dev/null || true
-                        shopt -u dotglob 2>/dev/null || true
-                        rm -rf "$NESTED_DIR"
-                    fi
+            # Flatten nested folder if tarball unpacked into a subfolder
+            if [ ! -f "$CLANG_TARGET_DIR/bin/clang" ]; then
+                NESTED_DIR=$(find "$CLANG_TARGET_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+                if [ -n "$NESTED_DIR" ] && [ -f "$NESTED_DIR/bin/clang" ]; then
+                    shopt -s dotglob 2>/dev/null || true
+                    mv "$NESTED_DIR"/* "$CLANG_TARGET_DIR"/ 2>/dev/null || true
+                    shopt -u dotglob 2>/dev/null || true
+                    rm -rf "$NESTED_DIR"
                 fi
+            fi
 
-                chmod -R +x "$CLANG_TARGET_DIR/bin" 2>/dev/null || true
+            chmod -R +x "$CLANG_TARGET_DIR/bin" 2>/dev/null || true
 
-                if [ -x "$CLANG_TARGET_DIR/bin/clang" ]; then
-                    set +eE
-                    CLANG_VER=$("$CLANG_TARGET_DIR/bin/clang" --version 2>/dev/null | head -n 1 || echo "r596125")
-                    set -eE
-                    echo "✅ Clang ready at $CLANG_TARGET_DIR ($CLANG_VER)"
-                else
-                    echo "⚠️ Clang binary was not found in $CLANG_TARGET_DIR/bin/clang after extraction."
-                fi
+            if [ -x "$CLANG_TARGET_DIR/bin/clang" ]; then
+                set +eE
+                CLANG_VER=$("$CLANG_TARGET_DIR/bin/clang" --version 2>/dev/null | head -n 1 || echo "r614150")
+                set -eE
+                echo "✅ Clang ready at $CLANG_TARGET_DIR ($CLANG_VER)"
             else
-                echo "⚠️ Failed to fetch Clang r596125 URL from GitHub API."
+                echo "⚠️ Clang binary was not found in $CLANG_TARGET_DIR/bin/clang after extraction."
             fi
         else
-            echo "✅ Clang r596125 already present in tree."
+            echo "✅ Clang r614150 already present in tree."
         fi
     fi
 
