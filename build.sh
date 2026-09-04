@@ -25,7 +25,7 @@ exec 3>&1 4>&2
 exec 1> >(tee -a "$LOG_FILE") 2>&1
 
 # 📱 Telegram Notification Setup
-TELEGRAM_TOKEN="8801527482:AAHbZLLx3j1D-y2rfdB1qGZWEVV1LmBFtzc"
+TELEGRAM_TOKEN="8801527482:AAGnIGDyUNJ5zIe0Bp7UiMrtdBZmdK7cFgw"
 TELEGRAM_CHAT_ID="-1003914151464"
 # ==========================================
 
