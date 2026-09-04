@@ -10,7 +10,7 @@ else
 fi
 
 # 📱 Telegram Notification Setup
-TELEGRAM_TOKEN="8801527482:AAHbZLLx3j1D-y2rfdB1qGZWEVV1LmBFtzc"
+TELEGRAM_TOKEN="8801527482:AAFQgcYE2-whaawuPxR5akv5CB6uyjfs4XY"
 TELEGRAM_CHAT_ID="-1003914151464"
 
 send_tg_msg() {
