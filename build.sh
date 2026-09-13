@@ -244,21 +244,21 @@ case "$DEVICE" in
 
             4)
                 ROM_NAME="Infinity-X"
-                ANDROID_VERSION="16-QPR2"
+                ANDROID_VERSION="17"
                 GH_REPO="mayuresh-releases/Infinity-X_stone"
 
                 REPO_INIT_URL="https://github.com/projectinfinity-X/manifest"
-                REPO_INIT_BRANCH="16"
+                REPO_INIT_BRANCH="17"
                 USE_LOCAL_MANIFEST="false"
                 LOCAL_MANIFEST_BRANCH=""
                 BUILD_TARGET="infinity_stone-userdebug"
                 BUILD_COMMAND="m bacon"
 
                 MANUAL_GIT_CLONES=(
-                    "https://github.com/Infinity-X-Devices/device_xiaomi_stone.git device/xiaomi/stone"
-                    "https://github.com/Infinity-X-Devices/vendor_xiaomi_stone.git vendor/xiaomi/stone"
+                    "https://github.com/mayuresh2543/device_xiaomi_stone_new.git -b infinity-17 device/xiaomi/stone"
+                    "https://github.com/mayuresh2543/vendor_xiaomi_stone.git vendor/xiaomi/stone"
                     "https://github.com/mayuresh2543/kernel_xiaomi_stone_rebase.git kernel/xiaomi/stone"
-                    "https://github.com/mayuresh-sources/hardware_dolby.git -b sony-1.0 hardware/dolby"
+                    "https://github.com/mayuresh-sources/infinity_build_soong.git build/soong"
                     "https://github.com/LineageOS/android_hardware_xiaomi.git -b lineage-23.2 hardware/xiaomi"
                     "https://github.com/mayuresh-sources/packages_apps_ViPER4AndroidFX.git packages/apps/ViPER4AndroidFX"
                 )
