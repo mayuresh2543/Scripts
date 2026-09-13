@@ -57,9 +57,9 @@ case "$DEVICE" in
 
             4)
                 ROM_NAME="Infinity-X"
-                ANDROID_VERSION="16-QPR2"
+                ANDROID_VERSION="17"
                 GH_REPO="mayuresh-releases/Infinity-X_stone"
-                REPO_INIT_BRANCH="16"
+                REPO_INIT_BRANCH="17"
                 ;;
 
             5)
