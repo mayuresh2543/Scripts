@@ -270,7 +270,7 @@ case "$DEVICE" in
                 ROM_VERSION="24.0"
                 GH_REPO="mayuresh-releases/LineageOS_stone"
 
-                REPO_INIT_URL="https://github.com/lineage-24-stone/android.git"
+                REPO_INIT_URL="https://github.com/LineageOS/android.git"
                 REPO_INIT_BRANCH="lineage-24.0"
                 USE_LOCAL_MANIFEST="true"
                 LOCAL_MANIFEST_BRANCH="lineage-17"
@@ -280,6 +280,8 @@ case "$DEVICE" in
                 BASE_URL="https://github.com/lineage-24-stone"
                 CUSTOM_REPOS=(
                     "build/soong|lineage_a17_build_soong"
+                    "packages/apps/Updater|lineage_a17_packages_apps_Updater"
+                    "packages/apps/Settings|lineage_a17_packages_apps_Settings"
                 )
                 ;;
 
