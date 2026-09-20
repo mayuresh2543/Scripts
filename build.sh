@@ -368,8 +368,10 @@ sync_repositories() {
         echo "⏭️ Skipping local manifests (Not supported by $ROM_NAME)."
     fi
 
-    # Remove stale GCC prebuilts to prevent "Cannot remove project" repo sync errors
-    rm -rf prebuilts/gcc 2>/dev/null || true
+    # Remove stale GCC 4.9 arm prebuilts to prevent "Cannot remove project" repo sync errors (Android 17 only)
+    if [ "$ANDROID_VERSION" == "17" ]; then
+        rm -rf prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 2>/dev/null || true
+    fi
 
     if [ -f /opt/crave/resync.sh ]; then
         echo "🚀 Running Crave resync..."
@@ -488,7 +490,6 @@ sync_repositories() {
 compile_rom() {
     # 3. Environment Variables
     export TZ="Asia/Kolkata"
-    [ "$ANDROID_VERSION" == "17" ] && export GOMAXPROCS=16 GOMEMLIMIT=42GiB GOGC=25 MALLOC_ARENA_MAX=4
 
     # 📦 Install legacy Ncurses via apt as requested (spes only)
     if [ "$DEVICE" == "spes" ]; then
