@@ -180,6 +180,7 @@ case "$DEVICE" in
                     "packages/apps/Settings|lineage_qpr2_packages_apps_Settings"
                     "packages/apps/Launcher3|lineage_qpr2_packages_apps_Launcher3"
                     "frameworks/native|lineage_qpr2_frameworks_native"
+                    "art|lineage_qpr2_android_art"
                     "frameworks/base|lineage_qpr2_frameworks_base"
                     "bionic|lineage_qpr2_bionic"
                     "frameworks/libs/systemui|lineage_qpr2_frameworks_libs_systemui"
