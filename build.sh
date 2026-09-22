@@ -171,7 +171,7 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="lineage-23.2"
                 USE_LOCAL_MANIFEST="true"
                 LOCAL_MANIFEST_BRANCH="lineage-16"
-                BUILD_TARGET="lineage_stone-bp4a-user"
+                BUILD_TARGET="lineage_stone-bp4a-userdebug"
                 BUILD_COMMAND="m bacon"
 
                 BASE_URL="https://github.com/lineage-23-2-stone"
@@ -199,7 +199,7 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="lineage-22.2"
                 USE_LOCAL_MANIFEST="true"
                 LOCAL_MANIFEST_BRANCH="lineage-15"
-                BUILD_TARGET="lineage_stone-bp1a-user"
+                BUILD_TARGET="lineage_stone-bp1a-userdebug"
                 BUILD_COMMAND="m bacon"
 
                 MANUAL_GIT_CLONES=(
@@ -232,7 +232,7 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="seventeen"
                 USE_LOCAL_MANIFEST="true"
                 LOCAL_MANIFEST_BRANCH="yaap-17"
-                BUILD_TARGET="yaap_stone-user"
+                BUILD_TARGET="yaap_stone-userdebug"
                 BUILD_COMMAND="m yaap"
 
                 BASE_URL="https://github.com/yaap-17-stone"
@@ -250,7 +250,7 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="17"
                 USE_LOCAL_MANIFEST="false"
                 LOCAL_MANIFEST_BRANCH=""
-                BUILD_TARGET="infinity_stone-user"
+                BUILD_TARGET="infinity_stone-userdebug"
                 BUILD_COMMAND="m bacon"
 
                 MANUAL_GIT_CLONES=(
@@ -273,7 +273,7 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="lineage-24.0"
                 USE_LOCAL_MANIFEST="true"
                 LOCAL_MANIFEST_BRANCH="lineage-17"
-                BUILD_TARGET="lineage_stone-cp2a-user"
+                BUILD_TARGET="lineage_stone-cp2a-userdebug"
                 BUILD_COMMAND="m bacon"
 
                 BASE_URL="https://github.com/lineage-24-stone"
@@ -305,7 +305,7 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="lineage-20.0"
                 USE_LOCAL_MANIFEST="true"
                 LOCAL_MANIFEST_BRANCH="spes-13"
-                BUILD_TARGET="lineage_spes-user"
+                BUILD_TARGET="lineage_spes-userdebug"
                 BUILD_COMMAND="m bacon"
 
                 MANUAL_REMOVALS=(
