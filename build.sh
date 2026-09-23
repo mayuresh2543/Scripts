@@ -156,6 +156,7 @@ echo "=========================================="
 MANUAL_REMOVALS=()
 MANUAL_GIT_CLONES=()
 CUSTOM_REPOS=()
+BUILD_TARGET=""
 
 case "$DEVICE" in
     "stone")
@@ -285,6 +286,18 @@ case "$DEVICE" in
                 )
                 ;;
 
+            6)
+                ROM_NAME="Axion"
+                ANDROID_VERSION="16-QPR2"
+                GH_REPO="mayuresh-releases/Axion_stone"
+
+                REPO_INIT_URL="https://github.com/AxionAOSP/android.git"
+                REPO_INIT_BRANCH="lineage-23.2"
+                USE_LOCAL_MANIFEST="true"
+                LOCAL_MANIFEST_BRANCH="axion-16"
+                BUILD_TARGET="axion stone va"
+                BUILD_COMMAND="ax -br"
+                ;;
 
             *)
                 echo "❌ Invalid ROM choice for stone!"
@@ -522,7 +535,11 @@ compile_rom() {
     set +eE   # 🛑 Turn OFF strict mode
     source build/envsetup.sh
     if [ -n "$BUILD_TARGET" ]; then
-        lunch "$BUILD_TARGET"
+        if [[ "$BUILD_TARGET" == *" "* ]]; then
+            $BUILD_TARGET
+        else
+            lunch "$BUILD_TARGET"
+        fi
         set -eE   # 🟢 Turn strict mode back ON for the actual compilation
 
         # 5. Prep the output directory
@@ -764,6 +781,47 @@ EOF
             fi
             ;;
 
+        6)
+            # 🟣 Axion Classic Response Structure
+            echo "Generating classic response ${DEVICE}.json for Axion..."
+            FILE_SIZE=$(stat -c %s "$ROM_ZIP")
+            FILE_HASH=$(md5sum "$ROM_ZIP" | awk '{print $1}')
+            GH_DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${REL_TAG}/${FILE_NAME}"
+            JSON_FILE="${TARGET_DIR}/${DEVICE}.json"
+
+            ROM_TYPE=$(echo "$FILE_NAME" | grep -ioE "OFFICIAL|COMMUNITY|UNOFFICIAL" | head -n 1 | tr '[:lower:]' '[:upper:]')
+            [ -z "$ROM_TYPE" ] && ROM_TYPE="OFFICIAL"
+
+            ROM_VER=$(echo "$FILE_NAME" | cut -d'-' -f2)
+            if [[ ! "$ROM_VER" =~ ^[0-9]+(\.[0-9]+)* ]]; then
+                ROM_VER="16-QPR2"
+            fi
+
+            jq -n \
+              --arg dt "$BUILD_DATETIME" \
+              --arg fn "$FILE_NAME" \
+              --arg id "$FILE_HASH" \
+              --arg rt "$ROM_TYPE" \
+              --arg sz "$FILE_SIZE" \
+              --arg url "$GH_DOWNLOAD_URL" \
+              --arg ver "$ROM_VER" \
+              '{
+                response: [
+                  {
+                    datetime: ($dt | tonumber),
+                    filename: $fn,
+                    id: $id,
+                    romtype: $rt,
+                    size: ($sz | tonumber),
+                    url: $url,
+                    version: $ver
+                  }
+                ]
+              }' > "$JSON_FILE"
+
+            echo "✅ Created $JSON_FILE"
+            FILES_TO_UPLOAD+=("$JSON_FILE")
+            ;;
 
     esac
 
