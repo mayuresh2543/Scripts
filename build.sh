@@ -297,6 +297,11 @@ case "$DEVICE" in
                 LOCAL_MANIFEST_BRANCH="axion-16"
                 BUILD_TARGET="axion stone va"
                 BUILD_COMMAND="ax -br"
+
+                BASE_URL="https://github.com/mayuresh-sources"
+                CUSTOM_REPOS=(
+                    "packages/apps/Updater|axion_a16_packages_apps_Updater"
+                )
                 ;;
 
             *)
