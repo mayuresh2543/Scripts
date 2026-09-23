@@ -70,6 +70,13 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="lineage-24.0"
                 ;;
 
+            6)
+                ROM_NAME="Axion"
+                ANDROID_VERSION="16-QPR2"
+                GH_REPO="mayuresh-releases/Axion_stone"
+                REPO_INIT_BRANCH="lineage-23.2"
+                ;;
+
             *)
                 echo "❌ Invalid ROM choice for stone!"
                 handle_error $LINENO
@@ -307,6 +314,48 @@ EOF
             else
                 echo "⚠️ Warning: Expected Infinity-X JSON at $(basename "$AUTO_JSON") but it was not found."
             fi
+            ;;
+
+        6)
+            # 🟣 Axion Classic Response Structure
+            echo "Generating classic response ${DEVICE}.json for Axion..."
+            FILE_SIZE=$(stat -c %s "$ROM_ZIP")
+            FILE_HASH=$(md5sum "$ROM_ZIP" | awk '{print $1}')
+            GH_DOWNLOAD_URL="https://github.com/${GH_REPO}/releases/download/${REL_TAG}/${FILE_NAME}"
+            JSON_FILE="${TARGET_DIR}/${DEVICE}.json"
+
+            ROM_TYPE=$(echo "$FILE_NAME" | grep -ioE "OFFICIAL|COMMUNITY|UNOFFICIAL" | head -n 1 | tr '[:lower:]' '[:upper:]')
+            [ -z "$ROM_TYPE" ] && ROM_TYPE="OFFICIAL"
+
+            ROM_VER=$(echo "$FILE_NAME" | cut -d'-' -f2)
+            if [[ ! "$ROM_VER" =~ ^[0-9]+(\.[0-9]+)* ]]; then
+                ROM_VER="16-QPR2"
+            fi
+
+            jq -n \
+              --arg dt "$BUILD_DATETIME" \
+              --arg fn "$FILE_NAME" \
+              --arg id "$FILE_HASH" \
+              --arg rt "$ROM_TYPE" \
+              --arg sz "$FILE_SIZE" \
+              --arg url "$GH_DOWNLOAD_URL" \
+              --arg ver "$ROM_VER" \
+              '{
+                response: [
+                  {
+                    datetime: ($dt | tonumber),
+                    filename: $fn,
+                    id: $id,
+                    romtype: $rt,
+                    size: ($sz | tonumber),
+                    url: $url,
+                    version: $ver
+                  }
+                ]
+              }' > "$JSON_FILE"
+
+            echo "✅ Created $JSON_FILE"
+            FILES_TO_UPLOAD+=("$JSON_FILE")
             ;;
 
     esac
