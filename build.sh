@@ -387,9 +387,9 @@ sync_repositories() {
         echo "⏭️ Skipping local manifests (Not supported by $ROM_NAME)."
     fi
 
-    # Remove stale GCC 4.9 arm prebuilts to prevent "Cannot remove project" repo sync errors (Android 17 only)
+    # Remove stale GCC prebuilts to prevent "Cannot remove project" repo sync errors (Android 17 only)
     if [ "$ANDROID_VERSION" == "17" ]; then
-        rm -rf prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 2>/dev/null || true
+        rm -rf prebuilts/gcc 2>/dev/null || true
     fi
 
     if [ -f /opt/crave/resync.sh ]; then
