@@ -283,6 +283,12 @@ case "$DEVICE" in
                     "build/soong|lineage_a17_build_soong"
                     "packages/apps/Updater|lineage_a17_packages_apps_Updater"
                     "packages/apps/Settings|lineage_a17_packages_apps_Settings"
+                    "packages/apps/Launcher3|lineage_a17_packages_apps_Launcher3"
+                    "frameworks/native|lineage_a17_frameworks_native"
+                    "art|lineage_a17_art"
+                    "frameworks/base|lineage_a17_frameworks_base"
+                    "bionic|lineage_a17_bionic"
+                    "frameworks/libs/systemui|lineage_a17_frameworks_libs_systemui"
                 )
                 ;;
 
