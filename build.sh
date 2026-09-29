@@ -8,6 +8,7 @@ ROM_CHOICE=${2:-1}
 START_TIME=$(date +%s)
 LOG_FILE="build_${DEVICE}_$(date +%Y%m%d_%H%M).log"
 rm -f "/tmp/build_failed.lock"
+rm -f "./out/siso_failed_commands.sh" "out/siso_failed_commands.sh" 2>/dev/null || true
 
 export BUILD_USERNAME="mayuresh"
 if [ -d "/opt/crave" ]; then
@@ -65,7 +66,18 @@ handle_error() {
     echo "❌ CRITICAL: Build failed on line $FAILED_LINE!"
 
     local LOG_LINK=""
-    
+    local SISO_LINK=""
+
+    # Ensure jq is installed
+    if ! command -v jq &> /dev/null; then
+        sudo apt-get install -y jq > /dev/null 2>&1 || true
+    fi
+
+    local SERVER=""
+    if command -v jq &> /dev/null; then
+        SERVER=$(curl -s --connect-timeout 5 https://api.gofile.io/servers | jq -r '.data.servers[0].name' 2>/dev/null || true)
+    fi
+
     # Try to upload the log file if it exists
     if [ -n "$LOG_FILE" ] && [ -f "$LOG_FILE" ]; then
         if command -v gzip &> /dev/null && [[ "$LOG_FILE" != *.gz ]]; then
@@ -74,16 +86,10 @@ handle_error() {
             LOG_FILE="${LOG_FILE}.gz"
         fi
         echo "☁️ Attempting to upload error log to Gofile..."
-        
-        # Ensure jq is installed
-        if ! command -v jq &> /dev/null; then
-            sudo apt-get install -y jq > /dev/null 2>&1 || true
-        fi
-        
+
         if command -v jq &> /dev/null; then
-            local SERVER=$(curl -s --connect-timeout 5 https://api.gofile.io/servers | jq -r '.data.servers[0].name' 2>/dev/null || true)
             local UPLOADED_TO_GOFILE="false"
-            
+
             if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
                 local UPLOAD_RES=$(curl -s -F "file=@${LOG_FILE}" "https://${SERVER}.gofile.io/contents/uploadfile")
                 local STATUS=$(echo "$UPLOAD_RES" | jq -r '.status' 2>/dev/null || true)
@@ -93,7 +99,7 @@ handle_error() {
                     UPLOADED_TO_GOFILE="true"
                 fi
             fi
-            
+
             if [ "$UPLOADED_TO_GOFILE" == "false" ]; then
                 echo "⚠️ Gofile API unavailable or upload failed. Falling back to Pixeldrain for error log..."
                 local PIXELDRAIN_API_KEY="89f5f646-bd8e-4210-826e-33f69930e0f7"
@@ -108,11 +114,51 @@ handle_error() {
         fi
     fi
 
+    # Android 17: Upload siso_failed_commands.sh if present
+    local SISO_FAILED_FILE="./out/siso_failed_commands.sh"
+    if [ ! -f "$SISO_FAILED_FILE" ] && [ -f "out/siso_failed_commands.sh" ]; then
+        SISO_FAILED_FILE="out/siso_failed_commands.sh"
+    fi
+
+    if [ -f "$SISO_FAILED_FILE" ]; then
+        echo "☁️ Attempting to upload $SISO_FAILED_FILE to Gofile..."
+        if command -v jq &> /dev/null; then
+            local UPLOADED_SISO_TO_GOFILE="false"
+
+            if [ -n "$SERVER" ] && [ "$SERVER" != "null" ]; then
+                local UPLOAD_RES=$(curl -s --connect-timeout 10 --max-time 120 -F "file=@${SISO_FAILED_FILE}" "https://${SERVER}.gofile.io/contents/uploadfile")
+                local STATUS=$(echo "$UPLOAD_RES" | jq -r '.status' 2>/dev/null || true)
+                if [ "$STATUS" == "ok" ]; then
+                    local DL_PAGE=$(echo "$UPLOAD_RES" | jq -r '.data.downloadPage' 2>/dev/null || true)
+                    if [ -n "$DL_PAGE" ] && [ "$DL_PAGE" != "null" ]; then
+                        SISO_LINK="$DL_PAGE"
+                        echo "✅ siso_failed_commands.sh uploaded successfully to Gofile!"
+                        UPLOADED_SISO_TO_GOFILE="true"
+                    fi
+                fi
+            fi
+
+            if [ "$UPLOADED_SISO_TO_GOFILE" == "false" ]; then
+                echo "⚠️ Gofile API unavailable or upload failed. Falling back to Pixeldrain for siso_failed_commands.sh..."
+                local PIXELDRAIN_API_KEY="89f5f646-bd8e-4210-826e-33f69930e0f7"
+                local UPLOAD_RES=$(curl -s --connect-timeout 10 --max-time 120 -u ":$PIXELDRAIN_API_KEY" -F "file=@${SISO_FAILED_FILE}" "https://pixeldrain.com/api/file")
+                local SUCCESS=$(echo "$UPLOAD_RES" | jq -r '.success' 2>/dev/null || true)
+                if [ "$SUCCESS" == "true" ]; then
+                    local FILE_ID=$(echo "$UPLOAD_RES" | jq -r '.id' 2>/dev/null || true)
+                    if [ -n "$FILE_ID" ] && [ "$FILE_ID" != "null" ]; then
+                        SISO_LINK="https://pixeldrain.com/u/$FILE_ID"
+                        echo "✅ siso_failed_commands.sh uploaded successfully to Pixeldrain!"
+                    fi
+                fi
+            fi
+        fi
+    fi
+
     local END_TIME=$(date +%s)
     local ELAPSED_MINUTES=$(((END_TIME - START_TIME) / 60))
     local ELAPSED_HOURS=$((ELAPSED_MINUTES / 60))
     local REM_MINUTES=$((ELAPSED_MINUTES % 60))
-    
+
     local DISPLAY_TIME="${ELAPSED_MINUTES}m"
     if [ "$ELAPSED_HOURS" -gt 0 ]; then
         DISPLAY_TIME="${ELAPSED_HOURS}h ${REM_MINUTES}m"
@@ -120,19 +166,24 @@ handle_error() {
 
     local DISPLAY_ROM="${ROM_NAME:-Unknown}"
     local DISPLAY_ANDROID="${ANDROID_VERSION:-Unknown}"
-    
+
     local FAIL_MSG="❌ <b>BUILD FAILED</b>%0A%0A"
     FAIL_MSG+="<blockquote>• <b>Device:</b> ${DEVICE_NAME}%0A"
     FAIL_MSG+="• <b>ROM:</b> ${DISPLAY_ROM}%0A"
     FAIL_MSG+="• <b>Android:</b> ${DISPLAY_ANDROID}%0A"
     FAIL_MSG+="• <b>Time:</b> ${DISPLAY_TIME}%0A"
     FAIL_MSG+="• <b>Error:</b> Line ${FAILED_LINE}"
-    
+
     if [ -n "$LOG_LINK" ]; then
-        FAIL_MSG="${FAIL_MSG}%0A• <b>Crash Log:</b> <a href=\"${LOG_LINK}\">View Crash Log</a></blockquote>"
+        FAIL_MSG="${FAIL_MSG}%0A• <b>Crash Log:</b> <a href=\"${LOG_LINK}\">View Crash Log</a>"
     else
-        FAIL_MSG="${FAIL_MSG}%0A• <b>Crash Log:</b> Check Crave Logs</blockquote>"
+        FAIL_MSG="${FAIL_MSG}%0A• <b>Crash Log:</b> Check Crave Logs"
     fi
+
+    if [ -n "$SISO_LINK" ]; then
+        FAIL_MSG="${FAIL_MSG}%0A• <b>Failed Commands:</b> <a href=\"${SISO_LINK}\">View siso_failed_commands.sh</a>"
+    fi
+    FAIL_MSG="${FAIL_MSG}</blockquote>"
 
     send_tg_msg "$FAIL_MSG"
     
@@ -572,6 +623,7 @@ compile_rom() {
     echo "=========================================="
 
     # Dynamically run whatever command the ROM needs
+    rm -f "./out/siso_failed_commands.sh" "out/siso_failed_commands.sh" 2>/dev/null || true
     $BUILD_COMMAND
 
     # Calculate precise time taken
