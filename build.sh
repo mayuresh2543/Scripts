@@ -326,7 +326,7 @@ case "$DEVICE" in
                 REPO_INIT_BRANCH="lineage-24.0"
                 USE_LOCAL_MANIFEST="true"
                 LOCAL_MANIFEST_BRANCH="lineage-17"
-                BUILD_TARGET="lineage_stone-cp2a-userdebug"
+                BUILD_TARGET="lineage_stone-cp2a-user"
                 BUILD_COMMAND="m bacon"
 
                 BASE_URL="https://github.com/lineage-24-stone"
@@ -340,6 +340,8 @@ case "$DEVICE" in
                     "frameworks/base|lineage_a17_frameworks_base"
                     "bionic|lineage_a17_bionic"
                     "frameworks/libs/systemui|lineage_a17_frameworks_libs_systemui"
+                    "vendor/lineage|lineage_a17_vendor_lineage"
+                    "bootable/recovery|lineage_a17_bootable_recovery"
                 )
                 ;;
 
