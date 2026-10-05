@@ -332,7 +332,6 @@ case "$DEVICE" in
                 BASE_URL="https://github.com/lineage-24-stone"
                 CUSTOM_REPOS=(
                     "build/soong|lineage_a17_build_soong"
-                    "packages/apps/Updater|lineage_a17_packages_apps_Updater"
                     "packages/apps/Settings|lineage_a17_packages_apps_Settings"
                     "packages/apps/Launcher3|lineage_a17_packages_apps_Launcher3"
                     "frameworks/native|lineage_a17_frameworks_native"
