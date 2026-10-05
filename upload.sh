@@ -387,7 +387,7 @@ EOF
         echo "Generated on $(date)" >> source_changelog.txt
         echo "" >> source_changelog.txt
         
-        if curl -s -G "https://review.lineageos.org/changes/" --data-urlencode "q=status:merged branch:${branch} -project:^.*_device_.* -project:^.*mainline.* (-project:^.*_kernel_.* OR project:^.*android_kernel_qcom_sm8350.*)" -d "n=200" | sed '1d' | jq -r 'group_by(.project) | sort_by(.[0].submitted // .[0].updated // "") | reverse | .[] | "### " + .[0].project + "\n" + (map("- [" + ((.submitted // .updated // "Unknown") | .[0:10]) + "] " + .subject) | join("\n")) + "\n"' >> source_changelog.txt; then
+        if curl -s -G "https://review.lineageos.org/changes/" --data-urlencode "q=status:merged branch:${branch} -project:^.*_device_.* -project:^.*mainline.* (-project:^.*_kernel_.* OR project:^.*android_kernel_qcom_sm8350.*) (-project:^.*android_hardware_.* OR project:^.*android_hardware_xiaomi.*)" -d "n=200" | sed '1d' | jq -r 'group_by(.project) | sort_by(.[0].submitted // .[0].updated // "") | reverse | .[] | "### " + .[0].project + "\n" + (map("- [" + ((.submitted // .updated // "Unknown") | .[0:10]) + "] " + .subject) | join("\n")) + "\n"' >> source_changelog.txt; then
             if [ -s source_changelog.txt ]; then
                 echo "✅ Changelog saved to source_changelog.txt"
                 FILES_TO_UPLOAD+=("source_changelog.txt")
@@ -612,15 +612,21 @@ upload_and_notify() {
         if [ -s source_changelog.txt ]; then
             CHANGELOG_URL=""
             
-            # Upload changelog to paste.rs for a raw text preview link
-            RES=$(curl -s --max-time 10 --data-binary @source_changelog.txt https://paste.rs/ || true)
+            # Upload changelog (Catbox -> paste.c-net.org -> Pixeldrain fallback)
+            RES=$(curl -s --max-time 15 -F "reqtype=fileupload" -F "fileToUpload=@source_changelog.txt" https://catbox.moe/user/api.php | tr -d '\r\n' || true)
             if [[ "$RES" == http* ]]; then
-                CHANGELOG_URL=$(echo -n "$RES" | tr -d '\n\r')
+                CHANGELOG_URL="$RES"
             else
-                # Fallback to dpaste.org
-                RES=$(curl -s --max-time 10 -F "content=@source_changelog.txt" -F "format=url" -F "expiry_days=7" https://dpaste.org/api/ || true)
+                RES=$(curl -s --max-time 15 --data-binary @source_changelog.txt https://paste.c-net.org/ | tr -d '\r\n' || true)
                 if [[ "$RES" == http* ]]; then
-                    CHANGELOG_URL=$(echo -n "$RES" | tr -d '\n\r')
+                    CHANGELOG_URL="$RES"
+                else
+                    PIXELDRAIN_API_KEY="89f5f646-bd8e-4210-826e-33f69930e0f7"
+                    RES=$(curl -s --max-time 15 -u ":$PIXELDRAIN_API_KEY" -F "file=@source_changelog.txt" https://pixeldrain.com/api/file || true)
+                    FILE_ID=$(echo "$RES" | jq -r '.id' 2>/dev/null || echo "$RES" | grep -o '"id":"[^"]*' | cut -d'"' -f4 || true)
+                    if [ -n "$FILE_ID" ] && [ "$FILE_ID" != "null" ]; then
+                        CHANGELOG_URL="https://pixeldrain.com/u/$FILE_ID"
+                    fi
                 fi
             fi
 
