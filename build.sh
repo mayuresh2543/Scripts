@@ -339,7 +339,6 @@ case "$DEVICE" in
                     "frameworks/base|lineage_a17_frameworks_base"
                     "bionic|lineage_a17_bionic"
                     "frameworks/libs/systemui|lineage_a17_frameworks_libs_systemui"
-                    "vendor/lineage|lineage_a17_vendor_lineage"
                 )
                 ;;
 
