@@ -228,7 +228,6 @@ case "$DEVICE" in
 
                 BASE_URL="https://github.com/lineage-23-2-stone"
                 CUSTOM_REPOS=(
-                    "packages/apps/Updater|lineage_qpr2_packages_apps_Updater"
                     "packages/apps/Settings|lineage_qpr2_packages_apps_Settings"
                     "packages/apps/Launcher3|lineage_qpr2_packages_apps_Launcher3"
                     "frameworks/native|lineage_qpr2_frameworks_native"
