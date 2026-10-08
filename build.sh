@@ -291,6 +291,8 @@ case "$DEVICE" in
                 BASE_URL="https://github.com/yaap-17-stone"
                 CUSTOM_REPOS=(
                     "build/soong|build_soong"
+                    "frameworks/native|frameworks_native"
+                    "packages/apps/Launcher3|packages_apps_Launcher3"
                 )
                 ;;
 
