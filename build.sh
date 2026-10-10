@@ -323,24 +323,12 @@ case "$DEVICE" in
                 ROM_VERSION="24.0"
                 GH_REPO="mayuresh-releases/LineageOS_stone"
 
-                REPO_INIT_URL="https://github.com/LineageOS/android.git"
+                REPO_INIT_URL="https://github.com/lineage-24-stone/android.git"
                 REPO_INIT_BRANCH="lineage-24.0"
                 USE_LOCAL_MANIFEST="true"
                 LOCAL_MANIFEST_BRANCH="lineage-17"
                 BUILD_TARGET="lineage_stone-cp2a-userdebug"
                 BUILD_COMMAND="m bacon"
-
-                BASE_URL="https://github.com/lineage-24-stone"
-                CUSTOM_REPOS=(
-                    "build/soong|lineage_a17_build_soong"
-                    "packages/apps/Settings|lineage_a17_packages_apps_Settings"
-                    "packages/apps/Launcher3|lineage_a17_packages_apps_Launcher3"
-                    "frameworks/native|lineage_a17_frameworks_native"
-                    "art|lineage_a17_art"
-                    "frameworks/base|lineage_a17_frameworks_base"
-                    "bionic|lineage_a17_bionic"
-                    "frameworks/libs/systemui|lineage_a17_frameworks_libs_systemui"
-                )
                 ;;
 
             *)
