@@ -260,7 +260,6 @@ case "$DEVICE" in
 
                 BASE_URL="https://github.com/lineage-22-2-stone"
                 CUSTOM_REPOS=(
-                    "packages/apps/Updater|lineage_a15_packages_apps_Updater"
                     "packages/apps/Settings|lineage_a15_packages_apps_Settings"
                     "packages/apps/Trebuchet|lineage_a15_packages_apps_Trebuchet"
                     "frameworks/native|lineage_a15_frameworks_native"
